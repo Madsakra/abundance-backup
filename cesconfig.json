@@ -1,0 +1,35 @@
+{
+  "cesVersion": "2.12.1",
+  "projectName": "abundance-backup",
+  "packages": [
+    {
+      "name": "expo-router",
+      "type": "navigation",
+      "options": {
+        "type": "drawer + tabs"
+      }
+    },
+    {
+      "name": "stylesheet",
+      "type": "styling"
+    }
+  ],
+  "flags": {
+    "noGit": false,
+    "noInstall": false,
+    "overwrite": false,
+    "importAlias": true,
+    "packageManager": "npm",
+    "eas": true
+  },
+  "packageManager": {
+    "type": "npm",
+    "version": "11.0.0"
+  },
+  "os": {
+    "type": "Windows_NT",
+    "platform": "win32",
+    "arch": "x64",
+    "kernelVersion": "10.0.26100"
+  }
+}
