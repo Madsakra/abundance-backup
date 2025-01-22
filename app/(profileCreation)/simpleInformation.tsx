@@ -9,13 +9,16 @@ import DatePicker from '~/components/DatePicker';
 import FunctionTiedButton from '~/components/FunctionTiedButton';
 import ImageSelector from '~/components/ImageSelector';
 import InputContainer from '~/components/InputContainer';
+import { useUserAccount } from '~/ctx';
 import { updateLocalProfileFields } from '~/utils';
 
 export default function SimpleInformation() {
+  const {account} = useUserAccount();
   const [image, setImage] = useState<string | null>(null);
-  const [name, setName] = useState<string>('');
+  const [name, setName] = useState<string | undefined>(account?.name);
   const [gender, setGender] = useState<string>('');
   const [birthDate, setBirthDate] = useState<Date | null>(null);
+  
 
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
@@ -101,6 +104,7 @@ export default function SimpleInformation() {
           <TextInput
             placeholder="Enter your Name"
             value={name}
+            editable={false}
             onChangeText={(text) => setName(text)}
             style={[styles.inputBox]}
           />

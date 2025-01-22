@@ -1,25 +1,30 @@
 import { Entypo } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { doc } from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import { FlashList } from '@shopify/flash-list';
 import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList } from 'react-native-gesture-handler';
 
 import FunctionTiedButton from '~/components/FunctionTiedButton';
+import GoalTab from '~/components/GoalsTab';
 import LoadingAnimation from '~/components/LoadingAnimation';
 import PressableTab from '~/components/PressableTab';
 
 type Goal = {
-  id: string;
-  name: string;
-  value: number;
+  goalID:string,
+  categoryID: string;
+  max: number;
+  min: number;
+  unit:string,
 };
 
 export default function GoalSetting() {
-  const [allGoals, setAllGoals] = useState<Goal[]>([]);
+  const [allGoals, setAllGoals] = useState<Record<string, Goal[]>>({});
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [profileGoals, setProfileGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -29,36 +34,43 @@ export default function GoalSetting() {
   // CALL DB
   const loadAllGoals = async () => {
     try {
-      const querySnapshot = await firestore().collection('goals').get();
-
-      const temp: Goal[] = querySnapshot.docs.map((documentSnapshot) => ({
-        id: documentSnapshot.id,
-        name: documentSnapshot.data().name,
-        value: documentSnapshot.data().value,
-      }));
-      setAllGoals(temp);
+      const querySnapshot = await firestore().collectionGroup('predefined_goals').get();
+  
+      const temp: Record<string, Goal[]> = {};
+      querySnapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        const categoryID = data.categoryID;
+  
+        if (!temp[categoryID]) {
+          temp[categoryID] = [];
+        }
+  
+        temp[categoryID].push({
+          goalID: doc.id,
+          categoryID,
+          max: data.max,
+          min: data.min,
+          unit: data.unit,
+        });
+      });
+  
+      setAllGoals(temp); // Now allGoals is an object grouped by categoryID
     } catch (error) {
-      console.error('Error loading health conditions: ', error);
+      console.error('Error loading goals:', error);
     }
   };
 
   const handleGoals = (newGoal: Goal) => {
-    // set health condi if selected, unselect if tapped again
-    // also make sure no double entries
     setProfileGoals((prevState) => {
-      // Check if the condition is already selected
-      const exists = prevState.some((oldGoal) => oldGoal.id === newGoal.id);
+      const exists = prevState.some((goal) => goal.goalID === newGoal.goalID);
 
       if (exists) {
-        // If it exists, remove it (deselect)
-        return prevState.filter((oldGoal) => oldGoal.id !== newGoal.id);
+        return prevState.filter((goal) => goal.goalID !== newGoal.goalID);
       } else {
-        // If it doesn't exist, add it (select)
         return [...prevState, newGoal];
       }
     });
   };
-
   const pushDataToFirebase = async () => {
     const profileData = await loadProfileData();
     console.log(profileData);
@@ -127,6 +139,7 @@ export default function GoalSetting() {
   useEffect(() => {
     loadAllGoals();
     loadProfileData();
+ 
   }, []);
 
   if (loading) {
@@ -143,7 +156,7 @@ export default function GoalSetting() {
         <Entypo name="chevron-thin-left" size={24} color="black" />
       </Link>
 
-      <Text style={styles.header}>Goal Setting</Text>
+      <Text style={styles.header}>Daily Goal Setting</Text>
       <Text style={styles.subHeader}>
         Final step ! You can select up to 3 goals and you can change them later.
       </Text>
@@ -153,31 +166,60 @@ export default function GoalSetting() {
         style={{ width: 100, height: 100, alignSelf: 'center', marginBottom: 20 }}
       />
 
-      <View style={styles.listBox}>
-        <FlashList
-          data={allGoals}
-          extraData={profileGoals}
-          renderItem={({ item }) => (
-            <PressableTab
-              editable
-              isPressed={profileGoals.some(
-                (condition) => condition.id === item.id // Ensure you're comparing by id
-              )}
-              tabBoxStyle={styles.tabBox}
-              handleInfo={handleGoals}
-              tabTextStyle={styles.tabTextStyle}
-              tabValue={item}
-            />
-          )}
-          keyExtractor={(item) => item.id}
-          estimatedItemSize={100}
-          contentContainerStyle={styles.listContainer}
-        />
-      </View>
+
+      <View>
+
+          {selectedCategory?
+
+          <View className=''>
+          
+          <Pressable onPress={()=>setSelectedCategory(null)} style={{paddingStart:15}}>
+          <Entypo name="chevron-thin-left" size={20} color="black" />
+          </Pressable>
+
+          <FlatList
+            data={allGoals[selectedCategory]}
+            extraData={profileGoals}
+            renderItem={({ item }) => (
+              <GoalTab
+                editable
+                isPressed={profileGoals.some((goal) => goal.goalID === item.goalID)}
+                tabBoxStyle={styles.tabBox}
+                handleInfo={handleGoals}
+                tabTextStyle={styles.tabTextStyle}
+                tabValue={item}
+              />
+            )}
+            keyExtractor={(item) => item.goalID}
+            contentContainerStyle={styles.listContainer}
+          />          
+          </View>
+
         
+
+            :
+            
+            <View style={{gap:5,justifyContent:"center",alignItems:"center"}}>
+              { Object.keys(allGoals).map((catID)=>(
+              <Pressable onPress={()=>setSelectedCategory(catID)}  style={[styles.tabBox,{backgroundColor:"#6E6E6E"}]} key={catID}>
+                <Text style={styles.tabTextStyle}>{catID}</Text>
+              </Pressable>
+            ))}
+            
+            </View>
+
+            
+        
+            }
+
+
+
+      </View>
+
+
       <FunctionTiedButton
         buttonStyle={styles.buttonBox}
-        onPress={()=>{auth().signOut();}}
+        onPress={nextSection}
         textStyle={styles.buttonText}
         title="Next"
       />

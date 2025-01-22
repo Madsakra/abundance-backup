@@ -40,7 +40,8 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
       
 
       try {
-        const documentSnapshot = await firestore().collection('profiles').doc(user?.uid).get(); // Use get() for a one-time read
+        const documentSnapshot = await firestore().collection('accounts').doc(user?.uid).collection('profile').doc('profile_info').get(); // Use get() for a one-time read
+     
 
         if (documentSnapshot.exists) {
           // Profile exists
@@ -83,22 +84,11 @@ export const UserAccountProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     if (user) {
 
-      const userAccountDoc = await firestore().collection('accounts').doc(user?.uid).get();
-      const accountData = userAccountDoc.data() as UserAccount;
-      console.log(user.uid)
-      console.log(accountData);
-      if (accountData.role !== 'user')
-      {
-        auth().signOut().then(()=>alert("Not authorised! Please Use the web instead"))
-      }
 
 
-      else if (!(user.emailVerified)) {
-        auth().signOut();
-        setLoading(false);
-        alert('Please verify your profile before joining us on the app!');
-        return null;
-      }
+
+
+
 
   
     
@@ -109,7 +99,27 @@ export const UserAccountProvider: React.FC<{ children: React.ReactNode }> = ({ c
         if (documentSnapshot.exists) {
           // Account exists
           const userAccount = documentSnapshot.data() as UserAccount;
-          setAccount(userAccount);
+          if (userAccount.role !== 'user')
+            {
+              auth().signOut().then(()=>alert("Not authorised! Please Use the web instead"))
+            }
+
+          else{
+            
+            if (!(user.emailVerified)) {
+              auth().signOut();
+              setLoading(false);
+              alert('Please verify your profile before joining us on the app!');
+              return null;
+            }
+
+            setAccount(userAccount);
+          }
+        
+
+
+
+          
         } else {
           router.replace('/');
           return null;
