@@ -3,7 +3,6 @@
     "name": "abundance-backup",
     "slug": "abundance-backup",
     "version": "1.0.0",
-
     "scheme": "abundance-backup",
     "web": {
       "bundler": "metro",
@@ -17,32 +16,66 @@
         {
           "launchMode": "most-recent"
         }
+      ],
+
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      "expo-secure-store",
+
+
+      [
+        "react-native-vision-camera",  
+          {
+            "cameraPermissionText": "Abundance needs access to your Camera."
+          }
+      ],
+
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
       ]
+
+ 
+      
     ],
     "experiments": {
       "typedRoutes": true,
-
       "tsconfigPaths": true
     },
-
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-
     "userInterfaceStyle": "light",
-
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "bundleIdentifier": "com.axmen.abundancebackup"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "googleServicesFile": "./google-services.json",
+      "package": "com.axmen.abundancebackup"
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "0305694b-9202-4d90-8d0c-afa6eeb408db"
       }
     }
   }
