@@ -24,7 +24,7 @@ export default function CookedMeals() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [isRenewing, setIsRenewing] = useState(false); // Track if renewing search
-  const { account } = useUserAccount();
+  const { account,membership } = useUserAccount();
   const router = useRouter();
 
   const baseUrl = 'https://api.edamam.com/api/recipes/v2';
@@ -125,7 +125,7 @@ export default function CookedMeals() {
 
           <Pressable
             onPress={() => {
-              if (account?.role === 'free_user') {
+              if (membership?.tier_name === 'free') {
                 toastInfo('Upgrade to premium to use this feature.');
                 return;
               }

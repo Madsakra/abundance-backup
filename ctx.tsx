@@ -3,7 +3,7 @@ import firestore from '@react-native-firebase/firestore';
 import { router } from 'expo-router';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-import { UserAccount } from './types/users/account';
+import { UserAccount, UserMembership } from './types/users/account';
 import { UserProfile } from './types/users/profile';
 
 // Define the context value structure
@@ -11,11 +11,14 @@ interface UserProfileContextValue {
   profile: UserProfile | null;
   setProfile: (profile: UserProfile) => void;
   loading: boolean;
+  
 }
 interface UserAccountContextValue {
   account: UserAccount | null;
   setAccount: (account: UserAccount) => void;
   loading: boolean;
+  membership: UserMembership | null;
+  setMembership:(newMemb: UserMembership)=>void;
 }
 
 // Create the context with a default value of null
@@ -78,6 +81,7 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
 export const UserAccountProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [account, setAccount] = useState<UserAccount | null>(null);
   const [loading, setLoading] = useState(true);
+  const [membership,setMembership] = useState<UserMembership|null>(null);
 
   const onAuthStateChanged = async (user: FirebaseAuthTypes.User | null) => {
     setLoading(true);
@@ -114,6 +118,22 @@ export const UserAccountProvider: React.FC<{ children: React.ReactNode }> = ({ c
             }
 
             setAccount(userAccount);
+
+        
+            const snapshot = await firestore()
+            .collection(`users/${user.uid}/membership`) // Path to a specific user's membership subcollection
+            .get();
+
+            const temp:UserMembership[] = []
+            snapshot.docs.map((doc)=>{
+              temp.push({
+                membershipID:doc.id,
+                ...doc.data()
+              }as UserMembership)
+            });
+
+            setMembership(temp[0])
+            
           }
         
 
@@ -138,7 +158,7 @@ export const UserAccountProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, []);
 
   return (
-    <UserAccountContext.Provider value={{ account, setAccount, loading }}>
+    <UserAccountContext.Provider value={{ account, setAccount, loading,membership,setMembership }}>
       {children}
     </UserAccountContext.Provider>
   );

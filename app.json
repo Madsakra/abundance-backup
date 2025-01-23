@@ -21,7 +21,12 @@
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
       "expo-secure-store",
-
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "Allow Abundance to access your device motion"
+        }
+      ],
 
       [
         "react-native-vision-camera",  

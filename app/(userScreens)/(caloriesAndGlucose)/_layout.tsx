@@ -8,7 +8,7 @@ export default function Layout() {
       }}
       initialRouteName="gateway">
       <Stack.Screen name="gateway" />
-      <Stack.Screen name="calories/addActivity"/>
+      <Stack.Screen name="output/addActivity"/>
       {/* <Stack.Screen name="calories/caloriesInput"/>
       <Stack.Screen name="calories/caloriesGraph"/>
       <Stack.Screen name="calories/addMeals"/>
