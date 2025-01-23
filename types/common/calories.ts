@@ -17,3 +17,18 @@ export interface CaloriesTracking {
   type: LogType;
   userID: string | undefined;
 }
+
+export interface MET_task {
+  id:string,
+  name:string,
+  value:number
+}
+
+export interface CaloriesOutputTracking {
+  amount:number;
+  category:"activity";
+  MET_task:MET_task;
+  timestamp:Date;
+  type:LogType;
+
+}
