@@ -55,7 +55,7 @@ export default function FoodLogLink({ index, image, routeName }: FoodLogLinkType
             <TouchableOpacity
               style={styles.option}
               onPress={() => {
-                router.replace('/calories/cookedMeals');
+                router.navigate('/calories/cookedMeals');
                 setVisible(false); // Close the modal
               }}>
               <Image source={require('assets/routeImages/cooked_food.jpg')} style={styles.icon} />

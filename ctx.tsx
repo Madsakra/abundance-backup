@@ -89,14 +89,6 @@ export const UserAccountProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (user) {
 
 
-
-
-
-
-
-  
-    
-
       try {
         const documentSnapshot = await firestore().collection('accounts').doc(user?.uid).get(); // Use get() for a one-time read
 

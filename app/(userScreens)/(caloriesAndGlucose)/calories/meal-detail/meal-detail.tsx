@@ -1,10 +1,12 @@
 import Entypo from '@expo/vector-icons/Entypo';
+import { getAuth } from '@react-native-firebase/auth';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import FunctionTiedButton from '~/components/FunctionTiedButton';
 import Toast from '~/components/notifications/toast';
+import { UserAccountProvider, useUserAccount } from '~/ctx';
 import { CaloriesTracking } from '~/types/common/calories';
 import { EdamamItem } from '~/types/common/edaman';
 import {
@@ -21,7 +23,7 @@ export default function MealDetail() {
   const params = useLocalSearchParams();
   const item: EdamamItem = JSON.parse(params.item as string);
   const [caloriesConsumed, setCaloriesConsumed] = useState<string>('');
-
+  const {account} = useUserAccount();
   const router = useRouter();
 
   const calculatedCalories = useMemo(() => {
@@ -64,7 +66,7 @@ export default function MealDetail() {
 
     try {
       await db
-        .collection('calories')
+        .collection(`accounts/${getAuth().currentUser?.uid}/calories`)
         .add(data)
         .then(() => {
           toastSuccess('Uploaded Successfully');
