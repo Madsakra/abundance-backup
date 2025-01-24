@@ -17,10 +17,13 @@
           "launchMode": "most-recent"
         }
       ],
-
+        "expo-health-connect",
+      "react-native-health-connect",
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
       "expo-secure-store",
+      "./androidManifestPlugin.js",
+ 
       [
         "expo-sensors",
         {
@@ -40,6 +43,11 @@
         {
           "ios": {
             "useFrameworks": "static"
+          },
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "minSdkVersion": 26
           }
         }
       ]
@@ -73,7 +81,12 @@
         "backgroundColor": "#ffffff"
       },
       "googleServicesFile": "./google-services.json",
-      "package": "com.axmen.abundancebackup"
+      "package": "com.axmen.abundancebackup",
+      "permissions": [
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.READ_FLOORS_CLIMBED",
+        "android.permission.health.READ_DISTANCE"
+      ]
     },
     "extra": {
       "router": {

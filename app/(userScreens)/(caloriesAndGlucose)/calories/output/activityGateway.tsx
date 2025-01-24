@@ -1,9 +1,9 @@
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { Platform, StyleSheet, Text, View } from 'react-native'
 
-export default function addActivity() {
+export default function activityGateway() {
   return (
     <View style={{flex:1}}>
         <Text style={styles.header}>Calorie Ouput</Text>
@@ -11,15 +11,19 @@ export default function addActivity() {
         <View style={{padding:30,alignItems:"center"}}>
             <Text>Calculate the calories output with the following tools:</Text>
 
-            <Link href="/(userScreens)/(caloriesAndGlucose)/calories/output/syncWithSteps" style={{marginTop:30}} >
+
+            {Platform.OS === "android" &&
+            <Link href="/(userScreens)/(caloriesAndGlucose)/calories/output/android_sync/syncWithSteps" style={{marginTop:30}} >
               <View style={styles.linkInnerContainer}>
               <AntDesign name="mobile1" size={25} color="#C68F5E" />
                   <Text style={styles.linkText}>Sync with phone steps</Text>
                   <AntDesign name="arrowright" size={25} color="black"  />
               </View>
-            </Link>
+            </Link>            
+            }
 
-            <Link href="/(userScreens)/(caloriesAndGlucose)/calories/output/metabolicEqui" style={{marginTop:20}} >
+
+            <Link href="/(userScreens)/(caloriesAndGlucose)/calories/output/MET_task/metabolicEqui" style={{marginTop:20}} >
               <View style={styles.linkInnerContainer}>
               <FontAwesome name="heartbeat" size={25} color="#C68F5E" />
                   <Text style={styles.linkText}>Metabolic Equivalent (MET) Task Record</Text>

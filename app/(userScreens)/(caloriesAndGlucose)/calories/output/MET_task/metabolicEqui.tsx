@@ -28,7 +28,7 @@ export default function metabolicEqui() {
 
  const addMetabolicTask = (metabolicTask: MET_task)=>{
     router.push({
-        pathname: '/calories/output/metabolicTask',
+        pathname: '/calories/output/MET_task/metabolicTask',
         params: { 
            id:metabolicTask.id,
            name:metabolicTask.name,
@@ -47,7 +47,7 @@ useEffect(()=>{
     <View>
             <Text style={styles.header}>Calorie Ouput</Text>
             <Link
-            href="/(userScreens)/(caloriesAndGlucose)/calories/output/addActivity"
+            href="/(userScreens)/(caloriesAndGlucose)/calories/output/activityGateway"
             style={styles.seperaterStyle}>
             <Entypo name="chevron-thin-left" size={24} color="black" />
             </Link>

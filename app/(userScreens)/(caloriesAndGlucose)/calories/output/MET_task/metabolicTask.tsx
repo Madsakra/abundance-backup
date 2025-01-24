@@ -117,7 +117,7 @@ export default function MetabolicTask() {
     <ScrollView style={{ flex: 1}}>
       <Text style={styles.header}>Calorie Output</Text>
       <Link
-        href="/(userScreens)/(caloriesAndGlucose)/calories/output/metabolicEqui"
+        href="/(userScreens)/(caloriesAndGlucose)/calories/output/MET_task/metabolicEqui"
         style={[styles.seperaterStyle, { alignSelf: "flex-start" }]}
       >
         <Entypo name="chevron-thin-left" size={24} color="black" />

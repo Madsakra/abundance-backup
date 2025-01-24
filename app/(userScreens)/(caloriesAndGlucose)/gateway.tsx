@@ -13,7 +13,7 @@ const calorieLinks = {
     },
     {
       image: require('assets/routeImages/calo_output.jpg'),
-      routeRef: '/calories/output/addActivity' as RelativePathString,
+      routeRef: '/calories/output/activityGateway' as RelativePathString,
       routeName: 'Calories Output Logging',
     },
     {
