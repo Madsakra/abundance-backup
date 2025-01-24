@@ -17,6 +17,7 @@ import {
   import { TimeRangeFilter } from 'react-native-health-connect/lib/typescript/types/base.types';
 import { Button } from '~/components/Button';
 import Databox from '~/components/Databox';
+import LoadingAnimation from '~/components/LoadingAnimation';
 import PermissionView from '~/components/PermissionView';
 
 
@@ -39,7 +40,7 @@ export default function syncWithSteps() {
   const [loading,setLoading] = useState(false);
   const [steps, setSteps] = useState(0);
   const [distance, setDistance] = useState(0); // in meters
-  const [floorsClimbed, setFloorsClimbed] = useState(0);
+  const [calories,setCalories] = useState(0);
 
 
   const initializeHealthConnect = async () => {
@@ -77,6 +78,7 @@ export default function syncWithSteps() {
 
 
     const fetchTodayData = async () => {
+      setLoading(true);
       try {
         const stepResult = await aggregateRecord({
           recordType:'Steps',
@@ -95,10 +97,22 @@ export default function syncWithSteps() {
           },
         });
 
+        // const caloriesResult = await aggregateRecord({
+        //   recordType:'TotalCaloriesBurned',
+        //   timeRangeFilter: {
+        //     operator: "between",
+        //     startTime: getStartOfToday().toISOString(),
+        //     endTime: getTodayDate().toISOString(),
+        //   },
+        // });
 
+  
         setSteps(stepResult.COUNT_TOTAL);
         setDistance(distanceResult.DISTANCE.inMeters);
 
+        setInterval(()=>{
+          setLoading(false);
+        },3000);
 
   
       } catch (err) {
@@ -130,9 +144,6 @@ export default function syncWithSteps() {
               <View style={{flex:1,justifyContent:"center",alignItems:"center"}}>
                 {
                   androidPermissions.length !==4?
- 
-       
-
                   <PermissionView
                   subTitle='Some permission is required for us to collect your health connect data.'
                   handleFunction={openHealthConnectSettings}
@@ -142,36 +153,48 @@ export default function syncWithSteps() {
                   subActionText='Check Permission'
                   secondaryAction={reGrantPermission}
                   />
-
            
-                  
                   :
                     <View style={styles.container}>
-                      
-                      <Pressable style={styles.settings} onPress={openHealthConnectSettings}>
-                      <Feather name="settings" size={24} color="#C68F5E" />
-                      </Pressable>
+                      {
+                          loading?
+                          <LoadingAnimation/>:
 
-                      <Databox
-                      iconName='footsteps-sharp'
-                      subjectName='Steps'
-                      value={steps}
-                      unit='steps'
-                      />
+                          <View>
+                          <Pressable style={styles.settings} onPress={openHealthConnectSettings}>
+                          <Feather name="settings" size={24} color="#C68F5E" />
+                          </Pressable>
 
-                      
-                      <Databox
-                      iconName='walk'
-                      subjectName='Distance'
-                      value={distance}
-                      unit='m'
-                      />
+                          <Databox
+                          iconName='footsteps-sharp'
+                          subjectName='Steps'
+                          value={steps}
+                          unit='steps'
+                          />
 
-      
+                          
+                          <Databox
+                          iconName='walk'
+                          subjectName='Distance'
+                          value={distance}
+                          unit='m'
+                          />
 
-                      <Pressable onPress={fetchTodayData} style={styles.syncButton}>
-                      <AntDesign name="sync" size={50} color="#C68F5E" />
-                      </Pressable>
+          
+                          {distance?
+                              <Pressable onPress={fetchTodayData} style={[styles.syncButton,{backgroundColor:"#C68F5E"}]}>
+                                    <Text style={{color:"white",fontSize:18,fontWeight:"600"}}>Log Data</Text>
+                              </Pressable>:
+                              <Pressable onPress={fetchTodayData} style={styles.syncButton}>
+                              <AntDesign name="sync" size={50} color="#C68F5E" />
+                              </Pressable>  
+                        
+                          }
+   
+
+                          </View>
+                        
+                      }
 
 
                     </View>
@@ -225,9 +248,18 @@ const styles = StyleSheet.create({
     },
     shadowOpacity:  0.20,
     shadowRadius: 5.62,
-
     elevation: 18,
-  }
+  },
+
+  submitButton:{
+    padding:20,
+    paddingHorizontal:40,
+    width:"80%",
+    marginTop:150,
+    alignSelf:"center",
+    borderRadius:30,
+    backgroundColor:"#C68F5E",
+  },
 
 
 })

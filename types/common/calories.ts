@@ -24,10 +24,16 @@ export interface MET_task {
   value:number
 }
 
+export interface StepTrack {
+  steps:number,
+  distance:number,
+}
+
 export interface CaloriesOutputTracking {
   amount:number;
   category:"activity";
-  MET_task:MET_task;
+  MET_task?:MET_task;
+  StepTrack?:StepTrack;
   timestamp:Date;
   type:LogType;
 
