@@ -19,7 +19,7 @@ export default function Databox({iconName,subjectName,value,unit}:DataBoxProps) 
             <Text style={{ fontSize: 18 }}>{subjectName}</Text>
             <Ionicons name={iconName} size={24} color="black" />
             </View>
-            <Text style={{ fontSize: 15, fontWeight: "300" }}>{value} {unit}</Text>
+            <Text style={{ fontSize: 15, fontWeight: "300" }}>{value.toFixed(2)} {unit}</Text>
         </View>
   )
 }

@@ -1,4 +1,4 @@
-import { Feather, FontAwesome5, Ionicons } from '@expo/vector-icons';
+import { AntDesign, Feather, FontAwesome5, Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
@@ -10,6 +10,7 @@ import {
     readRecords,
     getGrantedPermissions,
     openHealthConnectSettings,
+    aggregateRecord,
     
   } from 'react-native-health-connect';
   import { Permission } from 'react-native-health-connect/lib/typescript/types';
@@ -18,18 +19,29 @@ import { Button } from '~/components/Button';
 import Databox from '~/components/Databox';
 import PermissionView from '~/components/PermissionView';
 
-const getLastTwoWeeksDate = (): Date => {
-  return new Date(new Date().getTime() - 2 * 7 * 24 * 60 * 60 * 1000);
+
+const getStartOfToday = (): Date => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set time to 00:00:00
+  return today;
 };
 
 const getTodayDate = (): Date => {
-  return new Date();
+  const endOfToday = new Date();
+  endOfToday.setHours(23,59,59,59);
+  return endOfToday;
 };
+
 
 export default function syncWithSteps() {
 
 	const [androidPermissions, setAndroidPermissions] = useState<Permission[]>([]);
   const [loading,setLoading] = useState(false);
+  const [steps, setSteps] = useState(0);
+  const [distance, setDistance] = useState(0); // in meters
+  const [floorsClimbed, setFloorsClimbed] = useState(0);
+
+
   const initializeHealthConnect = async () => {
    
     if (Platform.OS!=="android")
@@ -46,18 +58,13 @@ export default function syncWithSteps() {
     }
   };
 
-
-
-
-
-
-    const checkPermissions = async () => {
+  const checkPermissions = async () => {
       const permissions = await getGrantedPermissions();      
       setAndroidPermissions(permissions);
     
     };
  
-    const reGrantPermission = async () => {
+  const reGrantPermission = async () => {
       const permissions = await getGrantedPermissions();
       if (permissions.length !==4)
         {
@@ -69,20 +76,34 @@ export default function syncWithSteps() {
   
 
 
-    const readSampleData = () => {
-      readRecords("Steps", {
-        timeRangeFilter: {
-          operator: "between",
-          startTime: getLastTwoWeeksDate().toISOString(),
-          endTime: getTodayDate().toISOString(),
-        },
-      })
-        .then((result) => {
-          console.log("Retrieved records: ", JSON.stringify({ result }, null, 2));
-        })
-        .catch((err) => {
-          console.error("Error reading records ", { err });
+    const fetchTodayData = async () => {
+      try {
+        const stepResult = await aggregateRecord({
+          recordType:'Steps',
+          timeRangeFilter: {
+            operator: "between",
+            startTime: getStartOfToday().toISOString(),
+            endTime: getTodayDate().toISOString(),
+          },
         });
+        const distanceResult = await aggregateRecord({
+          recordType:'Distance',
+          timeRangeFilter: {
+            operator: "between",
+            startTime: getStartOfToday().toISOString(),
+            endTime: getTodayDate().toISOString(),
+          },
+        });
+
+
+        setSteps(stepResult.COUNT_TOTAL);
+        setDistance(distanceResult.DISTANCE.inMeters);
+
+
+  
+      } catch (err) {
+        console.error("Error fetching today's data:", err);
+      }
     };
 
 
@@ -92,7 +113,6 @@ export default function syncWithSteps() {
         setLoading(true);
         initializeHealthConnect();
         checkPermissions();
-        console.log(androidPermissions)
         setLoading(false);
       };
     },[])
@@ -135,7 +155,7 @@ export default function syncWithSteps() {
                       <Databox
                       iconName='footsteps-sharp'
                       subjectName='Steps'
-                      value={200}
+                      value={steps}
                       unit='steps'
                       />
 
@@ -143,15 +163,16 @@ export default function syncWithSteps() {
                       <Databox
                       iconName='walk'
                       subjectName='Distance'
-                      value={100}
+                      value={distance}
                       unit='m'
                       />
-                      <Databox
-                      iconName='analytics'
-                      subjectName='Floors Climbed'
-                      value={2}
-                      unit=''
-                      />
+
+      
+
+                      <Pressable onPress={fetchTodayData} style={styles.syncButton}>
+                      <AntDesign name="sync" size={50} color="#C68F5E" />
+                      </Pressable>
+
 
                     </View>
                 }
@@ -179,15 +200,34 @@ const styles = StyleSheet.create({
   container:{
     flex:1,
     backgroundColor:"white",
-    width:"100%"
+    width:"100%",
   },
 
   settings:{
     alignSelf:"flex-end",
     margin:20,
-    marginBottom:10
+    marginBottom:20
   },
 
+  syncButton:{
+    borderRadius:90,
+    width:150,
+    height:150,
+    alignSelf:"center",
+    marginTop:90,
+    justifyContent:"center",
+    alignItems:"center",
+    backgroundColor:"white",
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity:  0.20,
+    shadowRadius: 5.62,
+
+    elevation: 18,
+  }
 
 
 })
