@@ -1,4 +1,6 @@
 import { AntDesign, Feather, FontAwesome5, Ionicons } from '@expo/vector-icons';
+import { getAuth } from '@react-native-firebase/auth';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
@@ -19,6 +21,9 @@ import { Button } from '~/components/Button';
 import Databox from '~/components/Databox';
 import LoadingAnimation from '~/components/LoadingAnimation';
 import PermissionView from '~/components/PermissionView';
+import { UserProfileProvider, useUserProfile } from '~/ctx';
+import { CaloriesOutputTracking } from '~/types/common/calories';
+import { currentUser, db, toastError, toastSuccess } from '~/utils';
 
 
 const getStartOfToday = (): Date => {
@@ -36,6 +41,7 @@ const getTodayDate = (): Date => {
 
 export default function syncWithSteps() {
 
+  const {profile} = useUserProfile();
 	const [androidPermissions, setAndroidPermissions] = useState<Permission[]>([]);
   const [loading,setLoading] = useState(false);
   const [steps, setSteps] = useState(0);
@@ -69,7 +75,7 @@ export default function syncWithSteps() {
       const permissions = await getGrantedPermissions();
       if (permissions.length !==4)
         {
-          alert("Please grant the necessary permissions for us to collect data!")
+          toastError("Please grant the necessary permissions for us to collect data!")
         }      
       setAndroidPermissions(permissions);
     
@@ -97,22 +103,20 @@ export default function syncWithSteps() {
           },
         });
 
-        // const caloriesResult = await aggregateRecord({
-        //   recordType:'TotalCaloriesBurned',
-        //   timeRangeFilter: {
-        //     operator: "between",
-        //     startTime: getStartOfToday().toISOString(),
-        //     endTime: getTodayDate().toISOString(),
-        //   },
-        // });
 
-  
+        // count calories per step first
+        // assume walking cal burnt
+        const caloPerStep = profile!.weight * 0.0005;
+
+      
+        setCalories(caloPerStep * stepResult.COUNT_TOTAL)
+   
         setSteps(stepResult.COUNT_TOTAL);
         setDistance(distanceResult.DISTANCE.inMeters);
 
         setInterval(()=>{
           setLoading(false);
-        },3000);
+        },2000);
 
   
       } catch (err) {
@@ -121,15 +125,61 @@ export default function syncWithSteps() {
     };
 
 
+    async function uploadCalories() {
+      setLoading(true);
+      if (!currentUser) return;
+      if (calories <= 0) {
+        toastError("Calories burned must be greater than zero!");
+        return;
+      }
+      const data: CaloriesOutputTracking = {
+        amount: calories,
+        category: 'activity',
+        StepTrack:{
+          steps:steps,
+          distance:distance,
+        },
+        timestamp: new Date(Date.now()),
+        type: 'output',
+      };
+  
+      try {
+        await db
+          .doc(`accounts/${getAuth().currentUser?.uid}/calories/steps`)
+          .set(data)
+          .then(() => {
+            setLoading(false);
+            toastSuccess('Uploaded Successfully');
+            setTimeout(() => {
+              router.push('/(userScreens)/(caloriesAndGlucose)/gateway');
+            }, 2200);
+          });
+      } catch (err) {
+        console.log(err);
+        toastError('Something went wrong!');
+      }
+    }
+  
+
+
+    const resetSync = ()=>{
+      setCalories(0);
+      setDistance(0);
+      setSteps(0);
+    }
+
+
+
     useEffect(()=>{
       if (Platform.OS==="android")
       {
         setLoading(true);
+        resetSync()
         initializeHealthConnect();
         checkPermissions();
         setLoading(false);
       };
-    },[])
+    },[]);
 
 
   return (
@@ -143,7 +193,7 @@ export default function syncWithSteps() {
               
               <View style={{flex:1,justifyContent:"center",alignItems:"center"}}>
                 {
-                  androidPermissions.length !==4?
+                  androidPermissions.length !==5?
                   <PermissionView
                   subTitle='Some permission is required for us to collect your health connect data.'
                   handleFunction={openHealthConnectSettings}
@@ -180,9 +230,16 @@ export default function syncWithSteps() {
                           unit='m'
                           />
 
+                          <Databox
+                          iconName='flame'
+                          subjectName='Calories Burnt'
+                          value={calories}
+                          unit='k/cal'
+                          />
+
           
-                          {distance?
-                              <Pressable onPress={fetchTodayData} style={[styles.syncButton,{backgroundColor:"#C68F5E"}]}>
+                          {steps?
+                              <Pressable onPress={uploadCalories} style={[styles.syncButton,{backgroundColor:"#C68F5E"}]}>
                                     <Text style={{color:"white",fontSize:18,fontWeight:"600"}}>Log Data</Text>
                               </Pressable>:
                               <Pressable onPress={fetchTodayData} style={styles.syncButton}>
@@ -237,7 +294,7 @@ const styles = StyleSheet.create({
     width:150,
     height:150,
     alignSelf:"center",
-    marginTop:90,
+    marginTop:40,
     justifyContent:"center",
     alignItems:"center",
     backgroundColor:"white",
@@ -255,7 +312,7 @@ const styles = StyleSheet.create({
     padding:20,
     paddingHorizontal:40,
     width:"80%",
-    marginTop:150,
+    marginTop:50,
     alignSelf:"center",
     borderRadius:30,
     backgroundColor:"#C68F5E",

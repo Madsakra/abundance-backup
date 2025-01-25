@@ -91,7 +91,7 @@ export default function MetabolicTask() {
         },
 
         timestamp: new Date(Date.now()),
-        type: 'input',
+        type: 'output',
       };
   
       try {
