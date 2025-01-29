@@ -13,28 +13,27 @@ export interface CaloriesTracking {
   amount: number;
   category: Category;
   food_info: FoodInfo;
-  timestamp: Date;
+  timestamp: any;
   type: LogType;
   userID: string | undefined;
 }
 
 export interface MET_task {
-  id:string,
-  name:string,
-  value:number
+  id: string;
+  name: string;
+  value: number;
 }
 
 export interface StepTrack {
-  steps:number,
-  distance:number,
+  steps: number;
+  distance: number;
 }
 
 export interface CaloriesOutputTracking {
-  amount:number;
-  category:"activity";
-  MET_task?:MET_task;
-  StepTrack?:StepTrack;
-  timestamp:Date;
-  type:LogType;
-
+  amount: number;
+  category: 'activity';
+  MET_task?: MET_task;
+  StepTrack?: StepTrack;
+  timestamp: Date;
+  type: LogType;
 }

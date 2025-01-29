@@ -18,7 +18,7 @@ const calorieLinks = {
     },
     {
       image: require('assets/routeImages/chart_data.jpg'),
-      routeRef: '/' as RelativePathString,
+      routeRef: '/(caloriesAndGlucose)/calories/graph/calories-graph' as RelativePathString,
       routeName: 'View Graphed Data',
     },
   ],

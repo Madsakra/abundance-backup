@@ -88,3 +88,15 @@ export function toastError(errorMessage: string) {
     toastRef.current?.show(errorMessage, 'error', 300);
   });
 }
+
+export const colorViolet = '#6b7fd6';
+export const colorBrown = '#ca9769';
+
+export const capitalizeFirstLetter = (string: string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
+export const imageMap: Record<string, any> = {
+  caloriesInput: require('~/assets/routeImages/calo_input.jpg'),
+  caloriesOutput: require('~/assets/routeImages/calo_output.jpg'),
+};
