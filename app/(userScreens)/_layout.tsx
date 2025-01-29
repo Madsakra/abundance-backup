@@ -1,4 +1,4 @@
-import { AntDesign, FontAwesome } from '@expo/vector-icons';
+import { AntDesign, Feather, FontAwesome } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import { DrawerContentScrollView, DrawerItem, DrawerItemList } from '@react-navigation/drawer';
 import { router } from 'expo-router';
@@ -113,6 +113,22 @@ const DrawerLayout = () => {
           headerTitle: 'Calories and Glucose',
           drawerLabel: 'Calories and Glucose',
           drawerIcon: ({ size, color }) => <FontAwesome name="book" size={24} color={color} />,
+        }}
+      />
+
+      <Drawer.Screen
+        name="(settings)"
+        listeners={({ navigation }) => ({
+          drawerItemPress: () => {
+            // when user clicks on navigation, send them back to settings
+            router.replace('/(userScreens)/(settings)/settings');
+          },
+        })}
+        options={{
+          headerTitleAlign: 'center',
+          headerTitle: 'Settings',
+          drawerLabel: 'Settings',
+          drawerIcon: ({ size, color }) => <Feather name="settings" size={24} color={color} />,
         }}
       />
     </Drawer>

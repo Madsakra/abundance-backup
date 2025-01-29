@@ -1,6 +1,6 @@
-import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import { UserAccount, UserMembership } from './types/users/account';
@@ -11,14 +11,13 @@ interface UserProfileContextValue {
   profile: UserProfile | null;
   setProfile: (profile: UserProfile) => void;
   loading: boolean;
-  
 }
 interface UserAccountContextValue {
   account: UserAccount | null;
   setAccount: (account: UserAccount) => void;
   loading: boolean;
   membership: UserMembership | null;
-  setMembership:(newMemb: UserMembership)=>void;
+  setMembership: (newMemb: UserMembership) => void;
 }
 
 // Create the context with a default value of null
@@ -28,47 +27,43 @@ const UserAccountContext = createContext<UserAccountContextValue | undefined>(un
 export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const onAuthStateChanged = async (user: FirebaseAuthTypes.User | null) => {
-    setLoading(true);
-
-    if (user) {
-      // if (!user?.emailVerified) {
-      //   auth().signOut();
-      //   setLoading(false);
-      //   alert('Please verify your profile before joining us on the app!');
-      //   return null;
-      // }
-
-      
-
-      try {
-        const documentSnapshot = await firestore().collection('accounts').doc(user?.uid).collection('profile').doc('profile_info').get(); // Use get() for a one-time read
-     
-
-        if (documentSnapshot.exists) {
-          // Profile exists
-          const userProfile = documentSnapshot.data() as UserProfile;
-          setProfile(userProfile);
-        } else {
-          // Profile does not exist
-          alert(
-            "Hi, we see it's your first time here! Please create a profile before using our services."
-          );
-          router.replace('/(profileCreation)/simpleInformation');
-          return null;
-        }
-      } catch (error) {
-        console.error('Error checking user profile: ', error);
-        throw error;
-      }
-    }
-    setLoading(false);
-  };
+  const router = useRouter();
 
   useEffect(() => {
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-    return subscriber;
+    const unsubscribe = auth().onAuthStateChanged((user) => {
+      if (!user) {
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      const docRef = firestore()
+        .collection('accounts')
+        .doc(user.uid)
+        .collection('profile')
+        .doc('profile_info');
+
+      // 🔥 Use `.onSnapshot()` to listen for real-time updates
+      const unsubscribeSnapshot = docRef.onSnapshot(
+        (documentSnapshot) => {
+          if (documentSnapshot.exists) {
+            setProfile(documentSnapshot.data() as UserProfile);
+          } else {
+            alert('Welcome! Please create a profile before using our services.');
+            router.replace('/(profileCreation)/simpleInformation');
+          }
+          setLoading(false);
+        },
+        (error) => {
+          console.error('Error fetching user profile:', error);
+          setLoading(false);
+        }
+      );
+
+      return unsubscribeSnapshot; // Unsubscribe when component unmounts
+    });
+
+    return unsubscribe; // Unsubscribe auth listener on unmount
   }, []);
 
   return (
@@ -80,77 +75,73 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
 export const UserAccountProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [account, setAccount] = useState<UserAccount | null>(null);
+  const [membership, setMembership] = useState<UserMembership | null>(null);
   const [loading, setLoading] = useState(true);
-  const [membership,setMembership] = useState<UserMembership|null>(null);
-
-  const onAuthStateChanged = async (user: FirebaseAuthTypes.User | null) => {
-    setLoading(true);
-
-    if (user) {
-
-
-      try {
-        const documentSnapshot = await firestore().collection('accounts').doc(user?.uid).get(); // Use get() for a one-time read
-
-        if (documentSnapshot.exists) {
-          // Account exists
-          const userAccount = documentSnapshot.data() as UserAccount;
-          if (userAccount.role !== 'user')
-            {
-              auth().signOut().then(()=>alert("Not authorised! Please Use the web instead"))
-            }
-
-          else{
-            
-            if (!(user.emailVerified)) {
-              auth().signOut();
-              setLoading(false);
-              alert('Please verify your profile before joining us on the app!');
-              return null;
-            }
-
-            setAccount(userAccount);
-
-        
-            const snapshot = await firestore()
-            .collection(`users/${user.uid}/membership`) // Path to a specific user's membership subcollection
-            .get();
-
-            const temp:UserMembership[] = []
-            snapshot.docs.map((doc)=>{
-              temp.push({
-                membershipID:doc.id,
-                ...doc.data()
-              }as UserMembership)
-            });
-
-            setMembership(temp[0])
-            
-          }
-        
-
-
-
-          
-        } else {
-          router.replace('/');
-          return null;
-        }
-      } catch (error) {
-        console.error('Error checking user account: ', error);
-        throw error;
-      }
-    }
-    setLoading(false);
-  };
+  const router = useRouter();
 
   useEffect(() => {
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-    return subscriber;
+    const authSubscriber = auth().onAuthStateChanged((user) => {
+      if (!user) {
+        setAccount(null);
+        setMembership(null);
+        setLoading(false);
+        return;
+      }
+
+      const accountRef = firestore().collection('accounts').doc(user.uid);
+
+      // 🔥 Listen for real-time account updates
+      const unsubscribeAccount = accountRef.onSnapshot(
+        async (accountSnapshot) => {
+          if (!accountSnapshot.exists) {
+            router.replace('/');
+            return;
+          }
+
+          const userAccount = accountSnapshot.data() as UserAccount;
+
+          if (userAccount.role !== 'user') {
+            await auth().signOut();
+            alert('Not authorized! Please use the web instead.');
+            return;
+          }
+
+          if (!user.emailVerified) {
+            await auth().signOut();
+            alert('Please verify your email before accessing the app.');
+            return;
+          }
+
+          setAccount(userAccount);
+
+          // Listen for real-time membership updates
+          const membershipRef = firestore().collection(`users/${user.uid}/membership`);
+          const unsubscribeMembership = membershipRef.onSnapshot((membershipSnapshot) => {
+            if (!membershipSnapshot.empty) {
+              const memberships: UserMembership[] = membershipSnapshot.docs.map((doc) => ({
+                membershipID: doc.id,
+                ...doc.data(),
+              })) as UserMembership[];
+              setMembership(memberships[0]); // Set first membership
+            }
+          });
+
+          return () => unsubscribeMembership(); // Cleanup membership listener
+        },
+        (error) => {
+          console.error('Error fetching user account:', error);
+        }
+      );
+
+      return () => unsubscribeAccount(); // Cleanup account listener
+    });
+
+    return () => authSubscriber(); // Cleanup auth listener
   }, []);
 
   return (
-    <UserAccountContext.Provider value={{ account, setAccount, loading,membership,setMembership }}>
+    <UserAccountContext.Provider
+      value={{ account, setAccount, loading, membership, setMembership }}>
       {children}
     </UserAccountContext.Provider>
   );
