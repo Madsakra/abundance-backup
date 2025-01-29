@@ -138,6 +138,7 @@ export default function syncWithSteps() {
         StepTrack:{
           steps:steps,
           distance:distance,
+          name:"Steps"
         },
         timestamp: new Date(Date.now()),
         type: 'output',

@@ -27,6 +27,7 @@ export interface MET_task {
 export interface StepTrack {
   steps:number,
   distance:number,
+  name:string,
 }
 
 export interface CaloriesOutputTracking {
