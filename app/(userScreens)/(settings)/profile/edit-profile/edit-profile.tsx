@@ -16,7 +16,7 @@ import { UserProfile } from '~/types/users/profile';
 import { capitalizeFirstLetter, colorViolet } from '~/utils';
 
 export default function EditProfile() {
-  const { profile, loading } = useUserProfile();
+  const { profile, loading, setProfile } = useUserProfile();
   const { account } = useUserAccount();
   const [image, setImage] = useState<string | null>(profile?.image || null);
   const [name, setName] = useState<string>(account?.name || '');
@@ -42,16 +42,25 @@ export default function EditProfile() {
       return;
     }
 
-    const reference = storage().ref(`${uid}-profile-picture`);
-    const pathToFile = result.assets[0].uri;
-    await reference.putFile(pathToFile);
-    const url = await reference.getDownloadURL();
-    setImage(url);
+    setImage(result.assets[0].uri);
   };
 
   const updateProfileInformations = async (updateData: Partial<UserProfile>) => {
+    let imageUrl = null;
+    if (updateData.image) {
+      const reference = storage().ref(`${uid}-profile-picture`);
+      await reference.putFile(updateData.image);
+      imageUrl = await reference.getDownloadURL();
+    }
+
     try {
-      await firestore().collection('profiles').doc(user?.uid).update(updateData);
+      await firestore()
+        .collection('profiles')
+        .doc(user?.uid)
+        .update({
+          image: imageUrl || profile?.image,
+          ...updateData,
+        });
       await firestore().collection('accounts').doc(user?.uid).update({ name });
 
       console.log('Document successfully updated!');
@@ -70,6 +79,15 @@ export default function EditProfile() {
       gender,
       birthDate: birthDate?.toISOString() || profile?.birthDate,
     });
+
+    if (profile) {
+      setProfile({
+        ...profile,
+        image: image || profile?.image,
+        gender,
+        birthDate: birthDate?.toISOString() || profile?.birthDate,
+      });
+    }
 
     router.push('/(userScreens)/(settings)/settings');
 
