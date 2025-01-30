@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 import { createRef } from 'react';
 
 import { IToast } from './components/notifications/toast';
@@ -99,4 +99,39 @@ export const capitalizeFirstLetter = (string: string) => {
 export const imageMap: Record<string, any> = {
   caloriesInput: require('~/assets/routeImages/calo_input.jpg'),
   caloriesOutput: require('~/assets/routeImages/calo_output.jpg'),
+};
+
+export const formatFirestoreTimestamp = (timestamp: FirebaseFirestoreTypes.Timestamp): string => {
+  if (!timestamp) return 'Invalid Date';
+
+  const date = timestamp.toDate();
+  return date.toLocaleDateString('en-GB');
+};
+
+export const formatFirestoreTime = (timestamp: FirebaseFirestoreTypes.Timestamp): string => {
+  if (!timestamp) return 'Invalid Time';
+
+  const date = timestamp.toDate();
+
+  return new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(date);
+};
+
+export const formatDate = (date: Date): string => {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date);
+};
+
+export const formatTime = (date: Date): string => {
+  return new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true, // Enables 12-hour format
+  }).format(date);
 };

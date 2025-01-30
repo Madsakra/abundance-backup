@@ -1,5 +1,5 @@
 import { FontAwesome } from '@expo/vector-icons'; // For calendar icon
-import auth from '@react-native-firebase/auth';
+import auth, { getAuth } from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
@@ -28,10 +28,12 @@ const CaloriesConsumedCard = () => {
 
     const startTimestamp = firestore.Timestamp.fromDate(startOfDay);
     const endTimestamp = firestore.Timestamp.fromDate(endOfDay);
+    const user = getAuth().currentUser;
+    const userId = user?.uid || '';
 
     try {
       const documentSnapshot = await firestore()
-        .collection('calories')
+        .collection(`accounts/${userId}/calories`)
         .where('userID', '==', userId)
         .where('type', '==', 'input')
         .where('timestamp', '>=', startTimestamp)
@@ -103,9 +105,7 @@ const CaloriesConsumedCard = () => {
 
         <TouchableOpacity
           onPress={() => {
-            if (
-              currentDate.toISOString().split('T')[0] === new Date().toISOString().split('T')[0]
-            ) {
+            if (currentDate.toISOString().split('T')[0] > new Date().toISOString().split('T')[0]) {
               return;
             }
             setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)));

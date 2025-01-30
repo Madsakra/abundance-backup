@@ -1,11 +1,12 @@
 import { FontAwesome } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
-import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import { useEffect, useState } from 'react';
-import { Image, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 import CaloriesConsumedCard from '~/components/calories-chart-card/calories-consumed-card';
 import ActionCard from '~/components/cards/action-card';
+import SummaryCard from '~/components/cards/summary-card';
 import { CaloriesTracking } from '~/types/common/calories';
 import { colorBrown } from '~/utils';
 
@@ -25,7 +26,7 @@ export default function CaloriesGraph() {
 
     try {
       const documentSnapshot = await firestore()
-        .collection('calories')
+        .collection(`accounts/${userId}/calories`)
         .where('userID', '==', userId)
         .where('type', '==', 'input')
         .where('timestamp', '>=', startTimestamp)
@@ -34,30 +35,10 @@ export default function CaloriesGraph() {
 
       const calories = documentSnapshot.docs.map((doc) => doc.data() as CaloriesTracking);
       setCaloriesConsumedToday(calories);
-      console.log('Calories consumed today: ', calories);
     } catch (error) {
       console.error('Error fetching caloreis consumed today: ', error);
     }
   }
-
-  const formatFirestoreTimestamp = (timestamp: FirebaseFirestoreTypes.Timestamp): string => {
-    if (!timestamp) return 'Invalid Date';
-
-    const date = timestamp.toDate();
-    return date.toLocaleDateString('en-GB');
-  };
-
-  const formatFirestoreTime = (timestamp: FirebaseFirestoreTypes.Timestamp): string => {
-    if (!timestamp) return 'Invalid Time';
-
-    const date = timestamp.toDate();
-
-    return new Intl.DateTimeFormat('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    }).format(date);
-  };
 
   const formatDate = (date: Date): string => {
     return new Intl.DateTimeFormat('en-GB', {
@@ -146,101 +127,14 @@ export default function CaloriesGraph() {
         </Text>
         <View>
           {caloriesConsumedToday.map((item, index) => (
-            <View
+            <SummaryCard
               key={index}
-              style={{
-                borderWidth: 1,
-                borderColor: 'gray',
-                borderRadius: 10,
-                padding: 15,
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 10,
-              }}>
-              <View
-                style={{
-                  display: 'flex',
-                  flexDirection: 'row',
-                  gap: 10,
-                  alignItems: 'center',
-                }}>
-                <View
-                  style={{
-                    width: 60,
-                    height: 60,
-                    backgroundColor: 'gray',
-                    overflow: 'hidden',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}>
-                  <Image
-                    source={{ uri: item.food_info.image_url }}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      resizeMode: 'cover',
-                    }}
-                  />
-                </View>
-                <View>
-                  <Text
-                    style={{
-                      fontWeight: 'bold',
-                      width: 130,
-                      marginBottom: 5,
-                    }}>
-                    {item.food_info.name}
-                  </Text>
-                  <Text
-                    style={{
-                      color: 'gray',
-                    }}>
-                    + {item.amount} kcal
-                  </Text>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      marginVertical: 10,
-                    }}>
-                    <FontAwesome
-                      style={{
-                        marginRight: 10,
-                      }}
-                      name="calendar"
-                      size={16}
-                      color="black"
-                    />
-                    <Text>{formatFirestoreTimestamp(item.timestamp)}</Text>
-                  </View>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                    }}>
-                    <FontAwesome
-                      style={{
-                        marginRight: 10,
-                      }}
-                      name="clock-o"
-                      size={16}
-                      color="black"
-                    />
-                    <Text>{formatFirestoreTime(item.timestamp)}</Text>
-                  </View>
-                </View>
-              </View>
-              <Text
-                style={{
-                  fontWeight: 'bold',
-                  fontSize: 18,
-                  textTransform: 'uppercase',
-                }}>
-                {item.type}
-              </Text>
-            </View>
+              title={item.food_info.name}
+              calories={item.amount}
+              imageUrl={item.food_info.image_url}
+              type={item.type}
+              timestamp={item.timestamp}
+            />
           ))}
           <View
             style={{
@@ -269,12 +163,10 @@ export default function CaloriesGraph() {
                   justifyContent: 'center',
                   alignItems: 'center',
                 }}>
-                <Image
-                  source={{ uri: '' }}
+                <View
                   style={{
                     width: '100%',
                     height: '100%',
-                    resizeMode: 'cover',
                     backgroundColor: 'white',
                   }}
                 />

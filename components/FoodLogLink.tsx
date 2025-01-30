@@ -44,7 +44,7 @@ export default function FoodLogLink({ index, image, routeName }: FoodLogLinkType
             <TouchableOpacity
               style={styles.option}
               onPress={() => {
-                console.log('Food with Barcode');
+                router.navigate('/calories/barcode-scanner/barcode-scanner');
                 setVisible(false); // Close the modal
               }}>
               <Image source={require('assets/routeImages/barcode.jpg')} style={styles.icon} />

@@ -6,7 +6,6 @@ import { Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-nati
 
 import FunctionTiedButton from '~/components/FunctionTiedButton';
 import Toast from '~/components/notifications/toast';
-import { UserAccountProvider, useUserAccount } from '~/ctx';
 import { CaloriesTracking } from '~/types/common/calories';
 import { EdamamItem } from '~/types/common/edaman';
 import {
@@ -23,7 +22,6 @@ export default function MealDetail() {
   const params = useLocalSearchParams();
   const item: EdamamItem = JSON.parse(params.item as string);
   const [caloriesConsumed, setCaloriesConsumed] = useState<string>('');
-  const {account} = useUserAccount();
   const router = useRouter();
 
   const calculatedCalories = useMemo(() => {

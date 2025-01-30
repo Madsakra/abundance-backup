@@ -17,7 +17,7 @@ import { capitalizeFirstLetter, colorViolet } from '~/utils';
 
 export default function EditProfile() {
   const { profile, loading, setProfile } = useUserProfile();
-  const { account } = useUserAccount();
+  const { account, setAccount } = useUserAccount();
   const [image, setImage] = useState<string | null>(profile?.image || null);
   const [name, setName] = useState<string>(account?.name || '');
   const [gender, setGender] = useState<string>(profile?.gender || '');
@@ -55,8 +55,10 @@ export default function EditProfile() {
 
     try {
       await firestore()
-        .collection('profiles')
+        .collection('accounts')
         .doc(user?.uid)
+        .collection('profile')
+        .doc('profile_info')
         .update({
           image: imageUrl || profile?.image,
           ...updateData,
@@ -86,6 +88,13 @@ export default function EditProfile() {
         image: image || profile?.image,
         gender,
         birthDate: birthDate?.toISOString() || profile?.birthDate,
+      });
+    }
+
+    if (account) {
+      setAccount({
+        ...account,
+        name,
       });
     }
 
