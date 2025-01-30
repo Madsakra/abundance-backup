@@ -25,7 +25,11 @@ import {
   useCameraPermission,
 } from 'react-native-vision-camera';
 
-export default function CameraTesting() {
+type CameraTestingProps = {
+  glucoseOrCalories: 'calories' | 'glucose';
+};
+
+export default function CameraTesting({ glucoseOrCalories }: CameraTestingProps) {
   Reanimated.addWhitelistedNativeProps({
     zoom: true,
   });
@@ -65,7 +69,7 @@ export default function CameraTesting() {
 
       router.push({
         pathname: '/captured-photo',
-        params: { media: photo.path, type: 'photo' },
+        params: { media: photo.path, type: 'photo', glucoseOrCalories },
       });
     } catch (e) {
       console.log(e);
@@ -86,7 +90,7 @@ export default function CameraTesting() {
       const media = result.assets[0].uri;
       router.push({
         pathname: '/captured-photo',
-        params: { media, type: 'photo' },
+        params: { media, type: 'photo', glucoseOrCalories },
       });
     }
   };

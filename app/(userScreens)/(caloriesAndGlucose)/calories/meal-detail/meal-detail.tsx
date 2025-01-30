@@ -2,7 +2,15 @@ import Entypo from '@expo/vector-icons/Entypo';
 import { getAuth } from '@react-native-firebase/auth';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 import FunctionTiedButton from '~/components/FunctionTiedButton';
 import Toast from '~/components/notifications/toast';
@@ -22,6 +30,7 @@ export default function MealDetail() {
   const params = useLocalSearchParams();
   const item: EdamamItem = JSON.parse(params.item as string);
   const [caloriesConsumed, setCaloriesConsumed] = useState<string>('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const calculatedCalories = useMemo(() => {
@@ -46,6 +55,7 @@ export default function MealDetail() {
 
   async function uploadCalories() {
     if (!currentUser) return;
+    setLoading(true);
 
     const data: CaloriesTracking = {
       amount: calculatedCalories === 0 ? getCaloriesPerServing(item) : calculatedCalories,
@@ -68,8 +78,9 @@ export default function MealDetail() {
         .add(data)
         .then(() => {
           toastSuccess('Uploaded Successfully');
+          setLoading(false);
           setTimeout(() => {
-            router.push('/(userScreens)/(caloriesAndGlucose)/gateway');
+            router.push('/(userScreens)/(caloriesAndGlucose)/calories/graph/calories-graph');
           }, 1200);
         });
     } catch (err) {
@@ -163,6 +174,7 @@ export default function MealDetail() {
               }}>
               <Text style={{ fontFamily: 'Poppins-Medium' }}>Servings Consumed</Text>
               <TextInput
+                keyboardType="numeric"
                 placeholder="Enter your serving consumed here..."
                 value={caloriesConsumed}
                 onChangeText={(text) => setCaloriesConsumed(text)}
@@ -189,12 +201,16 @@ export default function MealDetail() {
             </Text>
           </View>
         </View>
-        <FunctionTiedButton
-          buttonStyle={styles.buttonBox}
-          onPress={uploadCalories}
-          textStyle={styles.buttonText}
-          title="Log Food"
-        />
+        {loading ? (
+          <ActivityIndicator size="large" />
+        ) : (
+          <FunctionTiedButton
+            buttonStyle={styles.buttonBox}
+            onPress={uploadCalories}
+            textStyle={styles.buttonText}
+            title="Log Food"
+          />
+        )}
       </View>
     </ScrollView>
   );

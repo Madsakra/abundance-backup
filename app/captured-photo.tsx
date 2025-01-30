@@ -11,7 +11,9 @@ import { EdamamApiResponse } from '~/types/common/edaman';
 import { EDAMAM_APP_ID, EDAMAM_APP_KEY, OPENAI_API_KEY } from '~/utils';
 
 export default function CapturedPhoto() {
-  const { media, type } = useLocalSearchParams();
+  const { media, type, glucoseOrCalories } = useLocalSearchParams();
+  console.log(glucoseOrCalories);
+
   const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +32,34 @@ export default function CapturedPhoto() {
       // Read and convert image to Base64
       const base64Image = await RNFS.readFile(filePath, 'base64');
 
-      const response = await openai.chat.completions.create({
+      if (glucoseOrCalories === 'calories') {
+        const caloriesResponse = await openai.chat.completions.create({
+          model: 'gpt-4o-mini', // Vision model for image analysis
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Identify the food in this image. Respond with only the food name.',
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:image/png;base64,${base64Image}`,
+                  },
+                },
+              ],
+            },
+          ],
+          max_tokens: 20,
+        });
+
+        const foodName = caloriesResponse.choices[0].message.content?.trim();
+        return foodName;
+      }
+
+      const glucoseResponse = await openai.chat.completions.create({
         model: 'gpt-4o-mini', // Vision model for image analysis
         messages: [
           {
@@ -38,7 +67,7 @@ export default function CapturedPhoto() {
             content: [
               {
                 type: 'text',
-                text: 'Identify the food in this image. Respond with only the food name.',
+                text: 'Identify the glucose level in this image. Respond with only the glucose level.',
               },
               {
                 type: 'image_url',
@@ -51,9 +80,8 @@ export default function CapturedPhoto() {
         ],
         max_tokens: 20,
       });
-
-      const foodName = response.choices[0].message.content?.trim();
-      return foodName;
+      const glucoseLevel = glucoseResponse.choices[0].message.content?.trim();
+      return glucoseLevel;
     } catch (error) {
       console.error('Error identifying food', error);
       return null;
@@ -84,6 +112,16 @@ export default function CapturedPhoto() {
       return;
     }
 
+    if (glucoseOrCalories === 'glucose') {
+      const glucoseLevel = await analyzeImageWithOpenAI(media);
+      setLoading(false);
+      router.push({
+        pathname: '/(userScreens)/(caloriesAndGlucose)/glucose/glucose-logging',
+        params: { glucoseLevel },
+      });
+      return;
+    }
+
     const detectedFood = await analyzeImageWithOpenAI(media);
     if (detectedFood) {
       const nutritionData = await fetchNutritionDataFromEdamam(detectedFood);
@@ -101,16 +139,20 @@ export default function CapturedPhoto() {
     <View>
       <Link
         style={{
-          marginTop: 20,
+          marginTop: 50,
           fontWeight: 'bold',
         }}
-        href="/(userScreens)/(caloriesAndGlucose)/calories/food-scanner/food-scanner">
+        href={
+          glucoseOrCalories === 'calories'
+            ? '/(userScreens)/(caloriesAndGlucose)/calories/food-scanner/food-scanner'
+            : '/(userScreens)/(caloriesAndGlucose)/glucose/camera/camera-logging'
+        }>
         <Entypo name="chevron-left" size={30} color="black" />
       </Link>
       {type === 'photo' ? (
         <Image
           source={{ uri: `${media}` }}
-          style={{ width: '100%', height: '80%', resizeMode: 'contain' }}
+          style={{ width: '100%', height: '70%', resizeMode: 'contain' }}
         />
       ) : null}
       {type === 'base64' ? (
@@ -124,7 +166,7 @@ export default function CapturedPhoto() {
       ) : (
         <FunctionTiedButton
           onPress={handleAnalyzeImage}
-          title="Calculate Calories"
+          title={glucoseOrCalories === 'calories' ? 'Analyze Food' : 'Analyze Glucose'}
           buttonStyle={styles.buttonBox}
           textStyle={styles.buttonText}
         />

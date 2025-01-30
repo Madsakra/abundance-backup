@@ -2,7 +2,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useEffect, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View, Image } from 'react-native';
 
 import CaloriesConsumedCard from '~/components/calories-chart-card/calories-consumed-card';
 import ActionCard from '~/components/cards/action-card';
@@ -12,7 +12,7 @@ import { colorBrown } from '~/utils';
 
 export default function CaloriesGraph() {
   const user = auth().currentUser;
-  const currentDate = new Date(Date.now());
+  const [currentDate, setCurrentDate] = useState<Date>(new Date(Date.now()));
 
   const [caloriesConsumedToday, setCaloriesConsumedToday] = useState<CaloriesTracking[]>([]);
   const userId = user?.uid || '';
@@ -58,7 +58,7 @@ export default function CaloriesGraph() {
 
   useEffect(() => {
     fetchCaloriesConsumed(currentDate);
-  }, []);
+  }, [currentDate]);
 
   return (
     <ScrollView
@@ -68,7 +68,7 @@ export default function CaloriesGraph() {
         position: 'relative',
         backgroundColor: 'white',
       }}>
-      <CaloriesConsumedCard />
+      <CaloriesConsumedCard currentDate={currentDate} setCurrentDate={setCurrentDate} />
       <View
         style={{
           padding: 20,
@@ -131,9 +131,19 @@ export default function CaloriesGraph() {
               key={index}
               title={item.food_info.name}
               calories={item.amount}
-              imageUrl={item.food_info.image_url}
+              image={
+                <Image
+                  source={{ uri: item.food_info.image_url }}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    resizeMode: 'cover',
+                  }}
+                />
+              }
               type={item.type}
               timestamp={item.timestamp}
+              unit="kcal"
             />
           ))}
           <View

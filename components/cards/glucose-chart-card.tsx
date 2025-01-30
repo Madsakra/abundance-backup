@@ -2,20 +2,20 @@ import { FontAwesome } from '@expo/vector-icons'; // For calendar icon
 import auth, { getAuth } from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 
-import { CaloriesTracking } from '~/types/common/calories';
+import { GlucoseReading } from '~/types/common/glucose';
 
 type CaloriesConsumedCardProps = {
   currentDate: Date;
   setCurrentDate: React.Dispatch<React.SetStateAction<Date>>;
 };
 
-const CaloriesConsumedCard = ({ currentDate, setCurrentDate }: CaloriesConsumedCardProps) => {
+const GlucoseGraphCard = ({ currentDate, setCurrentDate }: CaloriesConsumedCardProps) => {
   // const [currentDate, setCurrentDate] = useState(new Date());
-  const [caloriesConsumedToday, setCaloriesConsumedToday] = useState<CaloriesTracking[]>([]);
-  const [caloriesConsumed, setCaloriesConsumed] = useState<CaloriesTracking[]>([]);
+  const [glucoseToday, setGlucoseToday] = useState<GlucoseReading[]>([]);
+  const [glucoseOverall, setGlucoseOverall] = useState<GlucoseReading[]>([]);
 
   const user = auth().currentUser;
   const userId = user?.uid || '';
@@ -38,15 +38,13 @@ const CaloriesConsumedCard = ({ currentDate, setCurrentDate }: CaloriesConsumedC
 
     try {
       const documentSnapshot = await firestore()
-        .collection(`accounts/${userId}/calories`)
-        .where('userID', '==', userId)
-        .where('type', '==', 'input')
+        .collection(`accounts/${userId}/glucose-logs`)
         .where('timestamp', '>=', startTimestamp)
         .where('timestamp', '<=', endTimestamp)
         .get();
 
-      const calories = documentSnapshot.docs.map((doc) => doc.data() as CaloriesTracking);
-      setCaloriesConsumedToday(calories);
+      const glucose = documentSnapshot.docs.map((doc) => doc.data() as GlucoseReading);
+      setGlucoseToday(glucose);
     } catch (error) {
       console.error('Error fetching caloreis consumed today: ', error);
     }
@@ -55,38 +53,40 @@ const CaloriesConsumedCard = ({ currentDate, setCurrentDate }: CaloriesConsumedC
   async function fetchCaloriesConsumedOverall() {
     try {
       const documentSnapshot = await firestore()
-        .collection(`accounts/${userId}/calories`)
-        .where('userID', '==', userId)
-        .where('type', '==', 'input')
+        .collection(`accounts/${userId}/glucose-logs`)
         .get();
 
-      const calories = documentSnapshot.docs.map((doc) => doc.data() as CaloriesTracking);
-      setCaloriesConsumed(calories);
+      const glucose = documentSnapshot.docs.map((doc) => doc.data() as GlucoseReading);
+      setGlucoseOverall(glucose);
     } catch (error) {
       console.error('Error fetching dietary restrictions: ', error);
     }
   }
 
-  const getMonthlyCalories = (caloriesConsumed: CaloriesTracking[]) => {
+  const getMonthlyGlucoseData = (glucose: GlucoseReading[]) => {
     const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
     const monthlyCalories: { [key: string]: number } = {};
 
     // Initialize monthly data
     monthLabels.forEach((month) => (monthlyCalories[month] = 0));
 
-    caloriesConsumed.forEach((entry) => {
+    glucose.forEach((entry) => {
       const date = entry.timestamp;
       const monthName = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
 
       if (monthlyCalories[monthName] !== undefined) {
-        monthlyCalories[monthName] += entry.amount || 0; // Sum calorie values
+        // Convert reading unit to mmol/L
+        if (entry.unit === 'mg/dL') {
+          entry.reading = entry.reading / 18.0182;
+        }
+        monthlyCalories[monthName] += entry.reading || 0; // Sum calorie values
       }
     });
 
     return monthLabels.map((month) => monthlyCalories[month]);
   };
 
-  const chartData = getMonthlyCalories(caloriesConsumed); // Process fetched data
+  const chartData = getMonthlyGlucoseData(glucoseOverall); // Process fetched data
 
   useEffect(() => {
     fetchCaloriesConsumed(currentDate);
@@ -121,9 +121,15 @@ const CaloriesConsumedCard = ({ currentDate, setCurrentDate }: CaloriesConsumedC
 
       {/* Card Content */}
       <View style={styles.card}>
-        <Text style={styles.title}>Calories Consumed</Text>
+        <Text style={styles.title}>Glucose Readings</Text>
         <Text style={styles.calories}>
-          {caloriesConsumedToday.reduce((acc, curr) => acc + curr.amount, 0)} kcal
+          {glucoseToday.reduce((acc, curr) => {
+            if (curr.unit === 'mg/dL') {
+              return Math.round((acc + curr.reading / 18.0182) * 100) / 100;
+            }
+            return Math.round((acc + curr.reading) * 100) / 100;
+          }, 0)}{' '}
+          mmol/L
         </Text>
 
         <LineChart
@@ -168,7 +174,7 @@ const CaloriesConsumedCard = ({ currentDate, setCurrentDate }: CaloriesConsumedC
   );
 };
 
-export default CaloriesConsumedCard;
+export default GlucoseGraphCard;
 
 const styles = StyleSheet.create({
   container: {

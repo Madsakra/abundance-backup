@@ -21,13 +21,13 @@ export default function FoodScanner() {
           style={{
             fontWeight: 'bold',
           }}
-          href="/(userScreens)/(caloriesAndGlucose)/calories/cookedMeals">
+          href="/(userScreens)/(caloriesAndGlucose)/glucose/glucose-logging">
           <Entypo name="chevron-left" size={30} color="black" />
         </Link>
-        <Text style={{ fontSize: 20 }}>Food Scanner</Text>
+        <Text style={{ fontSize: 20 }}>Glucose Scanner</Text>
       </View>
       <View style={styles.cameraContainer}>
-        <CameraTesting glucoseOrCalories="calories" />
+        <CameraTesting glucoseOrCalories="glucose" />
       </View>
     </SafeAreaView>
   );

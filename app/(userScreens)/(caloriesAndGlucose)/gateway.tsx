@@ -29,12 +29,13 @@ const glucoseLinks = {
   routeLists: [
     {
       image: require('assets/routeImages/glucose_log.jpg'),
-      routeRef: '/' as RelativePathString,
+      routeRef:
+        '/(caloriesAndGlucose)/glucose/glucose-logging?glucoseLevel=0%20mmo%2FL' as RelativePathString,
       routeName: 'Glucose Logging',
     },
     {
       image: require('assets/routeImages/chart_data.jpg'),
-      routeRef: '/' as RelativePathString,
+      routeRef: '/(caloriesAndGlucose)/glucose/graph/glucose-graph' as RelativePathString,
       routeName: 'View Graphed Data',
     },
   ],

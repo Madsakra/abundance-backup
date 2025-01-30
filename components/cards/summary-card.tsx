@@ -6,18 +6,20 @@ import { formatFirestoreTime, formatFirestoreTimestamp } from '~/utils';
 
 type SummaryCardProps = {
   title: string;
-  imageUrl: string;
+  image?: JSX.Element;
   calories: number;
   timestamp: FirebaseFirestoreTypes.Timestamp;
   type: string;
+  unit: string;
 };
 
 export default function SummaryCard({
   title,
-  imageUrl,
+  image,
   calories,
   timestamp,
   type,
+  unit,
 }: SummaryCardProps) {
   return (
     <View
@@ -48,14 +50,7 @@ export default function SummaryCard({
             justifyContent: 'center',
             alignItems: 'center',
           }}>
-          <Image
-            source={{ uri: imageUrl }}
-            style={{
-              width: '100%',
-              height: '100%',
-              resizeMode: 'cover',
-            }}
-          />
+          {image}
         </View>
         <View>
           <Text
@@ -70,7 +65,7 @@ export default function SummaryCard({
             style={{
               color: 'gray',
             }}>
-            + {calories} kcal
+            + {calories} {unit}
           </Text>
           <View
             style={{

@@ -61,7 +61,7 @@ export default function ActionCard({ href, title, description, imageKey }: Actio
           <Text
             style={{
               color: colorBrown,
-              width: 90,
+              width: 120,
             }}>
             {description}
           </Text>
