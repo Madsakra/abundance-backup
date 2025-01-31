@@ -117,6 +117,22 @@ const DrawerLayout = () => {
       />
 
       <Drawer.Screen
+        name="(goals)"
+        listeners={({ navigation }) => ({
+          drawerItemPress: () => {
+            // when user clicks on navigation, send them back to gateway
+            router.replace('/(userScreens)/(goals)/goals');
+          },
+        })}
+        options={{
+          headerTitleAlign: 'center',
+          headerTitle: 'Goals',
+          drawerLabel: 'Goals',
+          drawerIcon: ({ size, color }) => <FontAwesome name="flag" size={24} color={color} />,
+        }}
+      />
+
+      <Drawer.Screen
         name="(settings)"
         listeners={({ navigation }) => ({
           drawerItemPress: () => {

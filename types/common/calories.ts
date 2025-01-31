@@ -25,9 +25,9 @@ export interface MET_task {
 }
 
 export interface StepTrack {
-  steps:number,
-  distance:number,
-  name:string,
+  steps: number;
+  distance: number;
+  name: string;
 }
 
 export interface CaloriesOutputTracking {
@@ -35,6 +35,6 @@ export interface CaloriesOutputTracking {
   category: 'activity';
   MET_task?: MET_task;
   StepTrack?: StepTrack;
-  timestamp: Date;
+  timestamp: any;
   type: LogType;
 }

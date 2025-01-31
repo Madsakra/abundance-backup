@@ -7,8 +7,17 @@ import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { CustomDropdownGlucoseUnit } from '~/components/dropdown/custom-dropdown-glucose-unit';
 import Toast from '~/components/notifications/toast';
+import { useUserAccount } from '~/ctx';
 import { GlucoseUnit } from '~/types/common/glucose';
-import { colorPink, formatDate, formatTime, toastError, toastRef, toastSuccess } from '~/utils';
+import {
+  colorPink,
+  formatDate,
+  formatTime,
+  toastError,
+  toastInfo,
+  toastRef,
+  toastSuccess,
+} from '~/utils';
 
 export default function GlucoseLogging() {
   const { glucoseLevel } = useLocalSearchParams();
@@ -22,6 +31,7 @@ export default function GlucoseLogging() {
     glucoseLevelUnit as GlucoseUnit | 'mmol/L'
   );
   const [glucoseReading, setGlucoseReading] = useState<string>(glucoseLevelReading as string | '');
+  const { membership } = useUserAccount();
 
   const currentDate = new Date(Date.now());
   const user = auth().currentUser;
@@ -80,6 +90,10 @@ export default function GlucoseLogging() {
       </Text>
       <Pressable
         onPress={() => {
+          if (membership?.tier_name === 'free') {
+            toastInfo('Upgrade to premium to use this feature.');
+            return;
+          }
           router.push('/(userScreens)/(caloriesAndGlucose)/glucose/camera/camera-logging');
         }}
         style={{

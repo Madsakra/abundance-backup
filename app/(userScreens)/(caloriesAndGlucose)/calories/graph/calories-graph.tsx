@@ -7,7 +7,7 @@ import { ScrollView, Text, View, Image } from 'react-native';
 import CaloriesConsumedCard from '~/components/calories-chart-card/calories-consumed-card';
 import ActionCard from '~/components/cards/action-card';
 import SummaryCard from '~/components/cards/summary-card';
-import { CaloriesTracking } from '~/types/common/calories';
+import { CaloriesOutputTracking, CaloriesTracking } from '~/types/common/calories';
 import { colorBrown } from '~/utils';
 
 export default function CaloriesGraph() {
@@ -15,7 +15,12 @@ export default function CaloriesGraph() {
   const [currentDate, setCurrentDate] = useState<Date>(new Date(Date.now()));
 
   const [caloriesConsumedToday, setCaloriesConsumedToday] = useState<CaloriesTracking[]>([]);
+  const [caloriesOutputToday, setCaloriesOutputToday] = useState<CaloriesOutputTracking[]>([]);
   const userId = user?.uid || '';
+
+  const netCaloriesIntake =
+    caloriesConsumedToday.reduce((acc, item) => acc + item.amount, 0) -
+    caloriesOutputToday.reduce((acc, item) => acc + item.amount, 0);
 
   async function fetchCaloriesConsumed(timestamp: Date) {
     const startOfDay = new Date(timestamp.setHours(0, 0, 0, 0)); // 00:00:00
@@ -27,7 +32,6 @@ export default function CaloriesGraph() {
     try {
       const documentSnapshot = await firestore()
         .collection(`accounts/${userId}/calories`)
-        .where('userID', '==', userId)
         .where('type', '==', 'input')
         .where('timestamp', '>=', startTimestamp)
         .where('timestamp', '<=', endTimestamp)
@@ -35,6 +39,28 @@ export default function CaloriesGraph() {
 
       const calories = documentSnapshot.docs.map((doc) => doc.data() as CaloriesTracking);
       setCaloriesConsumedToday(calories);
+    } catch (error) {
+      console.error('Error fetching caloreis consumed today: ', error);
+    }
+  }
+
+  async function fetchCaloriesOutput(timestamp: Date) {
+    const startOfDay = new Date(timestamp.setHours(0, 0, 0, 0)); // 00:00:00
+    const endOfDay = new Date(timestamp.setHours(23, 59, 59, 999)); // 23:59:59
+
+    const startTimestamp = firestore.Timestamp.fromDate(startOfDay);
+    const endTimestamp = firestore.Timestamp.fromDate(endOfDay);
+
+    try {
+      const documentSnapshot = await firestore()
+        .collection(`accounts/${userId}/calories`)
+        .where('type', '==', 'output')
+        .where('timestamp', '>=', startTimestamp)
+        .where('timestamp', '<=', endTimestamp)
+        .get();
+
+      const calories = documentSnapshot.docs.map((doc) => doc.data() as CaloriesOutputTracking);
+      setCaloriesOutputToday(calories);
     } catch (error) {
       console.error('Error fetching caloreis consumed today: ', error);
     }
@@ -58,6 +84,7 @@ export default function CaloriesGraph() {
 
   useEffect(() => {
     fetchCaloriesConsumed(currentDate);
+    fetchCaloriesOutput(currentDate);
   }, [currentDate]);
 
   return (
@@ -133,7 +160,7 @@ export default function CaloriesGraph() {
               calories={item.amount}
               image={
                 <Image
-                  source={{ uri: item.food_info.image_url }}
+                  source={require('~/assets/routeImages/calo_input.jpg')}
                   style={{
                     width: '100%',
                     height: '100%',
@@ -146,6 +173,27 @@ export default function CaloriesGraph() {
               unit="kcal"
             />
           ))}
+          {caloriesOutputToday.map((item, index) => (
+            <SummaryCard
+              key={index}
+              title={item.MET_task?.name as string}
+              calories={Math.round(item.amount * 100) / 100}
+              image={
+                <Image
+                  source={require('~/assets/routeImages/calo_output.jpg')}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    resizeMode: 'cover',
+                  }}
+                />
+              }
+              type={item.type}
+              timestamp={item.timestamp}
+              unit="kcal"
+            />
+          ))}
+
           <View
             style={{
               borderWidth: 1,
@@ -194,7 +242,7 @@ export default function CaloriesGraph() {
                   style={{
                     color: 'gray',
                   }}>
-                  {caloriesConsumedToday.reduce((acc, item) => acc + item.amount, 0)} kcal
+                  {Math.round(netCaloriesIntake * 100) / 100} kcal
                 </Text>
                 <View
                   style={{

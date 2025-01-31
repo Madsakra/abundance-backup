@@ -65,7 +65,7 @@ export default function SummaryCard({
             style={{
               color: 'gray',
             }}>
-            + {calories} {unit}
+            {type === 'output' ? '-' : '+'} {calories} {unit}
           </Text>
           <View
             style={{

@@ -97,6 +97,9 @@ const GlucoseGraphCard = ({ currentDate, setCurrentDate }: CaloriesConsumedCardP
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
+          style={{
+            padding: 10,
+          }}
           onPress={() => {
             setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)));
           }}>
@@ -109,6 +112,9 @@ const GlucoseGraphCard = ({ currentDate, setCurrentDate }: CaloriesConsumedCardP
         </View>
 
         <TouchableOpacity
+          style={{
+            padding: 10,
+          }}
           onPress={() => {
             if (currentDate.toISOString().split('T')[0] > new Date().toISOString().split('T')[0]) {
               return;
