@@ -2,7 +2,7 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 
 import LoadingAnimation from '~/components/LoadingAnimation';
@@ -86,7 +86,7 @@ export default function EditHealthProfile() {
   }
 
   return (
-    <View
+    <ScrollView
       style={{
         backgroundColor: 'white',
         height: '100%',
@@ -291,6 +291,6 @@ export default function EditHealthProfile() {
           </Pressable>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
