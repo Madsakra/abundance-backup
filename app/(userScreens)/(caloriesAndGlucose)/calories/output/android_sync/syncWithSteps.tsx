@@ -194,7 +194,7 @@ export default function syncWithSteps() {
               
               <View style={{flex:1,justifyContent:"center",alignItems:"center"}}>
                 {
-                  androidPermissions.length !==5?
+                  androidPermissions.length !==6?
                   <PermissionView
                   subTitle='Some permission is required for us to collect your health connect data.'
                   handleFunction={openHealthConnectSettings}
