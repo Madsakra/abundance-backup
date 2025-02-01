@@ -39,7 +39,6 @@ const CaloriesConsumedCard = ({ currentDate, setCurrentDate }: CaloriesConsumedC
     try {
       const documentSnapshot = await firestore()
         .collection(`accounts/${userId}/calories`)
-        .where('userID', '==', userId)
         .where('type', '==', 'input')
         .where('timestamp', '>=', startTimestamp)
         .where('timestamp', '<=', endTimestamp)
@@ -56,7 +55,6 @@ const CaloriesConsumedCard = ({ currentDate, setCurrentDate }: CaloriesConsumedC
     try {
       const documentSnapshot = await firestore()
         .collection(`accounts/${userId}/calories`)
-        .where('userID', '==', userId)
         .where('type', '==', 'input')
         .get();
 
