@@ -24,7 +24,7 @@ const settingLinks: SettingLinkType[] = [
   {
     title: 'Membership',
     icon: <MaterialIcons name="card-membership" size={24} color={colorViolet} />,
-    uri: 'https://abundance-3f9ab.web.app/user',
+    uri: '/(userScreens)/(settings)/membership/membership',
   },
 ];
 
