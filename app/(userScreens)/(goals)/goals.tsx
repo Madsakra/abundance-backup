@@ -1,73 +1,37 @@
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 
+import {
+  fetchAllGlucoseReadingForToday,
+  fetchCaloriesConsumed,
+  fetchCaloriesOutput,
+} from '~/actions/actions';
 import ProgressCard from '~/components/cards/progress-card';
 import { useUserProfile } from '~/ctx';
-import { CaloriesTracking } from '~/types/common/calories';
+import { CaloriesOutputTracking, CaloriesTracking } from '~/types/common/calories';
 import { GlucoseReading } from '~/types/common/glucose';
 import { colorViolet } from '~/utils';
 
 export default function Goals() {
   const { profile } = useUserProfile();
   const [currentDate, setCurrentDate] = useState(new Date());
+
   const [caloriesConsumedToday, setCaloriesConsumedToday] = useState<CaloriesTracking[]>([]);
+  const [caloriesOutputToday, setCaloriesOutputToday] = useState<CaloriesOutputTracking[]>([]);
   const [totalGlucoseToday, setTotalGlucoseToday] = useState<GlucoseReading[]>([]);
 
   const totalGlucose = totalGlucoseToday.reduce((acc, curr) => acc + curr.reading, 0);
-  const totalCalories = caloriesConsumedToday.reduce((acc, curr) => acc + curr.amount, 0);
+
+  const totalCalories =
+    caloriesConsumedToday.reduce((acc, curr) => acc + curr.amount, 0) -
+    caloriesOutputToday.reduce((acc, curr) => acc + curr.amount, 0);
 
   const router = useRouter();
-
-  async function fetchCaloriesConsumed(timestamp: Date) {
-    const startOfDay = new Date(timestamp.setHours(0, 0, 0, 0)); // 00:00:00
-    const endOfDay = new Date(timestamp.setHours(23, 59, 59, 999)); // 23:59:59
-
-    const startTimestamp = firestore.Timestamp.fromDate(startOfDay);
-    const endTimestamp = firestore.Timestamp.fromDate(endOfDay);
-    const user = auth().currentUser;
-    const userId = user?.uid || '';
-
-    try {
-      const documentSnapshot = await firestore()
-        .collection(`accounts/${userId}/calories`)
-        .where('type', '==', 'input')
-        .where('timestamp', '>=', startTimestamp)
-        .where('timestamp', '<=', endTimestamp)
-        .get();
-
-      const calories = documentSnapshot.docs.map((doc) => doc.data() as CaloriesTracking);
-      setCaloriesConsumedToday(calories);
-    } catch (error) {
-      console.error('Error fetching caloreis consumed today: ', error);
-    }
-  }
-
-  async function fetchAllGlucoseReadingForToday(timestamp: Date) {
-    const startOfDay = new Date(timestamp.setHours(0, 0, 0, 0)); // 00:00:00
-    const endOfDay = new Date(timestamp.setHours(23, 59, 59, 999)); // 23:59:59
-    const user = auth().currentUser;
-    const userId = user?.uid || '';
-
-    const startTimestamp = firestore.Timestamp.fromDate(startOfDay);
-    const endTimestamp = firestore.Timestamp.fromDate(endOfDay);
-
-    try {
-      const documentSnapshot = await firestore()
-        .collection(`accounts/${userId}/glucose-logs`)
-        .where('timestamp', '>=', startTimestamp)
-        .where('timestamp', '<=', endTimestamp)
-        .get();
-
-      const glucoseLogs = documentSnapshot.docs.map((doc) => doc.data() as GlucoseReading);
-      setTotalGlucoseToday(glucoseLogs);
-    } catch (error) {
-      console.error('Error fetching caloreis consumed today: ', error);
-    }
-  }
+  const user = auth().currentUser;
+  const userId = user?.uid || '';
 
   const formatedCurrentDate = currentDate
     .toISOString()
@@ -77,8 +41,33 @@ export default function Goals() {
     .join('/');
 
   useEffect(() => {
-    fetchCaloriesConsumed(currentDate);
-    fetchAllGlucoseReadingForToday(currentDate);
+    let unsubscribeCaloriesConsumed: () => void;
+    let unsubscribeCaloriesOutput: () => void;
+    let unsubscribeGlucose: () => void;
+
+    (async () => {
+      unsubscribeCaloriesConsumed = await fetchCaloriesConsumed(
+        currentDate,
+        userId,
+        setCaloriesConsumedToday
+      );
+      unsubscribeCaloriesOutput = await fetchCaloriesOutput(
+        currentDate,
+        userId,
+        setCaloriesOutputToday
+      );
+      unsubscribeGlucose = await fetchAllGlucoseReadingForToday(
+        currentDate,
+        userId,
+        setTotalGlucoseToday
+      );
+    })();
+
+    return () => {
+      if (unsubscribeCaloriesConsumed) unsubscribeCaloriesConsumed();
+      if (unsubscribeCaloriesOutput) unsubscribeCaloriesOutput();
+      if (unsubscribeGlucose) unsubscribeGlucose();
+    };
   }, [currentDate]);
 
   return (
@@ -184,7 +173,11 @@ export default function Goals() {
         {profile?.goals.map((goal, index) => (
           <ProgressCard
             key={index}
-            currentValue={goal.categoryID === 'calories' ? totalCalories : totalGlucose}
+            currentValue={
+              goal.categoryID === 'calories'
+                ? Math.round(totalCalories * 100) / 100
+                : Math.round(totalGlucose * 100) / 100
+            }
             goalValue={goal.max}
             title={goal.categoryID}
             iconName={goal.categoryID === 'calories' ? 'fire' : 'tint'}

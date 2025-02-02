@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import axios from 'axios';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import SearchSection from '~/components/SearchSection';
@@ -61,9 +61,18 @@ export default function CookedMeals() {
     }
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      setFoodName('');
+      setData([]);
+    }, [])
+  );
+
   const renderItem = ({ item }: { item: EdamamItem }) => (
     <Pressable
       onPress={() => {
+        setFoodName('');
+        setData([]);
         router.push({
           pathname: '/(userScreens)/(caloriesAndGlucose)/calories/meal-detail/meal-detail',
           params: { item: JSON.stringify(item) },

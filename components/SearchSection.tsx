@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 type SearchSectionProps = {
@@ -9,6 +9,24 @@ type SearchSectionProps = {
 };
 
 export default function SearchSection({ value, setValue, searchFunction }: SearchSectionProps) {
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (value) {
+      if (debounceTimer) clearTimeout(debounceTimer);
+
+      const timer = setTimeout(() => {
+        searchFunction();
+      }, 500);
+
+      setDebounceTimer(timer);
+    }
+
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+    };
+  }, [value]);
+
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
       <TextInput
