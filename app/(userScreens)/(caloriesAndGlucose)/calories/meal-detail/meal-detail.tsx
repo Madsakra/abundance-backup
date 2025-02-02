@@ -134,7 +134,7 @@ export default function MealDetail() {
                 fontSize: 14,
                 fontWeight: 'bold',
               }}>
-              {item.yield}
+              1
             </Text>
           </View>
         </View>
