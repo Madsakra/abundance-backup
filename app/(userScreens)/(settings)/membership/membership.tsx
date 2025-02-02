@@ -1,11 +1,15 @@
 import { Pressable, Text, View } from 'react-native';
-import * as Linking from 'expo-linking'
+import * as WebBrowser from 'expo-web-browser';
+import { useState } from 'react';
 
 export default function Membership() {
 
+  const [result, setResult] = useState(null);
 
-  const userSubscription = ()=>{
-    Linking.openURL("https://docs.expo.dev/linking/into-your-app/")
+  const userSubscription = async ()=>{
+    let result = await WebBrowser.openBrowserAsync('https://expo.dev');
+   
+
   }
 
 
