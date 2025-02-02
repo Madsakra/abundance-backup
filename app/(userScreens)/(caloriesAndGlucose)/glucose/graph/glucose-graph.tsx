@@ -1,8 +1,8 @@
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ScrollView, Text, View, Image } from 'react-native';
 
+import { fetchAllGlucoseReadingForToday } from '~/actions/actions';
 import ActionCard from '~/components/cards/action-card';
 import GlucoseGraphCard from '~/components/cards/glucose-chart-card';
 import SummaryCard from '~/components/cards/summary-card';
@@ -16,30 +16,21 @@ export default function GlucoseGraph() {
   const [totalGlucoseToday, setTotalGlucoseToday] = useState<GlucoseReading[]>([]);
   const userId = user?.uid || '';
 
-  async function fetchAllGlucoseReadingForToday(timestamp: Date) {
-    const startOfDay = new Date(timestamp.setHours(0, 0, 0, 0)); // 00:00:00
-    const endOfDay = new Date(timestamp.setHours(23, 59, 59, 999)); // 23:59:59
-
-    const startTimestamp = firestore.Timestamp.fromDate(startOfDay);
-    const endTimestamp = firestore.Timestamp.fromDate(endOfDay);
-
-    try {
-      const documentSnapshot = await firestore()
-        .collection(`accounts/${userId}/glucose-logs`)
-        .where('timestamp', '>=', startTimestamp)
-        .where('timestamp', '<=', endTimestamp)
-        .get();
-
-      const glucoseLogs = documentSnapshot.docs.map((doc) => doc.data() as GlucoseReading);
-      setTotalGlucoseToday(glucoseLogs);
-    } catch (error) {
-      console.error('Error fetching caloreis consumed today: ', error);
-    }
-  }
-
   useEffect(() => {
-    fetchAllGlucoseReadingForToday(currentDate);
-  }, [currentDate]);
+    let unsubscribeGlucose: () => void;
+
+    (async () => {
+      unsubscribeGlucose = await fetchAllGlucoseReadingForToday(
+        currentDate,
+        userId,
+        setTotalGlucoseToday
+      );
+    })();
+
+    return () => {
+      if (unsubscribeGlucose) unsubscribeGlucose();
+    };
+  }, [currentDate, userId]);
 
   return (
     <ScrollView
@@ -73,7 +64,7 @@ export default function GlucoseGraph() {
             marginTop: 10,
           }}>
           <ActionCard
-            href="/(userScreens)/(caloriesAndGlucose)/glucose/glucose-logging"
+            href="/(caloriesAndGlucose)/glucose/glucose-logging?glucoseLevel=0%20mmo%2FL"
             title="Add Glucose Reading"
             description="Log your glucose reading"
             imageKey="glucoseInput"

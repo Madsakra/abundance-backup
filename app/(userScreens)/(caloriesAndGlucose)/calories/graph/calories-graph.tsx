@@ -4,6 +4,7 @@ import firestore from '@react-native-firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ScrollView, Text, View, Image } from 'react-native';
 
+import { fetchCaloriesConsumed, fetchCaloriesOutput } from '~/actions/actions';
 import CaloriesConsumedCard from '~/components/calories-chart-card/calories-consumed-card';
 import ActionCard from '~/components/cards/action-card';
 import SummaryCard from '~/components/cards/summary-card';
@@ -22,50 +23,6 @@ export default function CaloriesGraph() {
     caloriesConsumedToday.reduce((acc, item) => acc + item.amount, 0) -
     caloriesOutputToday.reduce((acc, item) => acc + item.amount, 0);
 
-  async function fetchCaloriesConsumed(timestamp: Date) {
-    const startOfDay = new Date(timestamp.setHours(0, 0, 0, 0)); // 00:00:00
-    const endOfDay = new Date(timestamp.setHours(23, 59, 59, 999)); // 23:59:59
-
-    const startTimestamp = firestore.Timestamp.fromDate(startOfDay);
-    const endTimestamp = firestore.Timestamp.fromDate(endOfDay);
-
-    try {
-      const documentSnapshot = await firestore()
-        .collection(`accounts/${userId}/calories`)
-        .where('type', '==', 'input')
-        .where('timestamp', '>=', startTimestamp)
-        .where('timestamp', '<=', endTimestamp)
-        .get();
-
-      const calories = documentSnapshot.docs.map((doc) => doc.data() as CaloriesTracking);
-      setCaloriesConsumedToday(calories);
-    } catch (error) {
-      console.error('Error fetching caloreis consumed today: ', error);
-    }
-  }
-
-  async function fetchCaloriesOutput(timestamp: Date) {
-    const startOfDay = new Date(timestamp.setHours(0, 0, 0, 0)); // 00:00:00
-    const endOfDay = new Date(timestamp.setHours(23, 59, 59, 999)); // 23:59:59
-
-    const startTimestamp = firestore.Timestamp.fromDate(startOfDay);
-    const endTimestamp = firestore.Timestamp.fromDate(endOfDay);
-
-    try {
-      const documentSnapshot = await firestore()
-        .collection(`accounts/${userId}/calories`)
-        .where('type', '==', 'output')
-        .where('timestamp', '>=', startTimestamp)
-        .where('timestamp', '<=', endTimestamp)
-        .get();
-
-      const calories = documentSnapshot.docs.map((doc) => doc.data() as CaloriesOutputTracking);
-      setCaloriesOutputToday(calories);
-    } catch (error) {
-      console.error('Error fetching caloreis consumed today: ', error);
-    }
-  }
-
   const formatDate = (date: Date): string => {
     return new Intl.DateTimeFormat('en-GB', {
       day: '2-digit',
@@ -83,9 +40,23 @@ export default function CaloriesGraph() {
   };
 
   useEffect(() => {
-    fetchCaloriesConsumed(currentDate);
-    fetchCaloriesOutput(currentDate);
-  }, [currentDate]);
+    let unsubscribeConsumed: () => void;
+    let unsubscribeOutput: () => void;
+
+    (async () => {
+      unsubscribeConsumed = await fetchCaloriesConsumed(
+        currentDate,
+        userId,
+        setCaloriesConsumedToday
+      );
+      unsubscribeOutput = await fetchCaloriesOutput(currentDate, userId, setCaloriesOutputToday);
+    })();
+
+    return () => {
+      if (unsubscribeConsumed) unsubscribeConsumed(); // ✅ Cleanup Firestore listener for consumed calories
+      if (unsubscribeOutput) unsubscribeOutput(); // ✅ Cleanup Firestore listener for output calories
+    };
+  }, [currentDate, userId]);
 
   return (
     <ScrollView
@@ -95,7 +66,11 @@ export default function CaloriesGraph() {
         position: 'relative',
         backgroundColor: 'white',
       }}>
-      <CaloriesConsumedCard currentDate={currentDate} setCurrentDate={setCurrentDate} />
+      <CaloriesConsumedCard
+        currentDate={currentDate}
+        setCurrentDate={setCurrentDate}
+        netCaloriesConsumed={netCaloriesIntake}
+      />
       <View
         style={{
           padding: 20,
@@ -125,7 +100,7 @@ export default function CaloriesGraph() {
             imageKey="caloriesInput"
           />
           <ActionCard
-            href="/"
+            href="/(userScreens)/(caloriesAndGlucose)/calories/output/activityGateway"
             title="Add Calories Output"
             description="Log Food Output"
             imageKey="caloriesOutput"

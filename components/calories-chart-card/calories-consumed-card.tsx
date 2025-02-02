@@ -5,14 +5,20 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 
+import { fetchCaloriesConsumed, fetchCaloriesConsumedOverall } from '~/actions/actions';
 import { CaloriesTracking } from '~/types/common/calories';
 
 type CaloriesConsumedCardProps = {
   currentDate: Date;
   setCurrentDate: React.Dispatch<React.SetStateAction<Date>>;
+  netCaloriesConsumed: number;
 };
 
-const CaloriesConsumedCard = ({ currentDate, setCurrentDate }: CaloriesConsumedCardProps) => {
+const CaloriesConsumedCard = ({
+  currentDate,
+  setCurrentDate,
+  netCaloriesConsumed,
+}: CaloriesConsumedCardProps) => {
   // const [currentDate, setCurrentDate] = useState(new Date());
   const [caloriesConsumedToday, setCaloriesConsumedToday] = useState<CaloriesTracking[]>([]);
   const [caloriesConsumed, setCaloriesConsumed] = useState<CaloriesTracking[]>([]);
@@ -26,44 +32,6 @@ const CaloriesConsumedCard = ({ currentDate, setCurrentDate }: CaloriesConsumedC
     .split('-')
     .reverse()
     .join('/');
-
-  async function fetchCaloriesConsumed(timestamp: Date) {
-    const startOfDay = new Date(timestamp.setHours(0, 0, 0, 0)); // 00:00:00
-    const endOfDay = new Date(timestamp.setHours(23, 59, 59, 999)); // 23:59:59
-
-    const startTimestamp = firestore.Timestamp.fromDate(startOfDay);
-    const endTimestamp = firestore.Timestamp.fromDate(endOfDay);
-    const user = getAuth().currentUser;
-    const userId = user?.uid || '';
-
-    try {
-      const documentSnapshot = await firestore()
-        .collection(`accounts/${userId}/calories`)
-        .where('type', '==', 'input')
-        .where('timestamp', '>=', startTimestamp)
-        .where('timestamp', '<=', endTimestamp)
-        .get();
-
-      const calories = documentSnapshot.docs.map((doc) => doc.data() as CaloriesTracking);
-      setCaloriesConsumedToday(calories);
-    } catch (error) {
-      console.error('Error fetching caloreis consumed today: ', error);
-    }
-  }
-
-  async function fetchCaloriesConsumedOverall() {
-    try {
-      const documentSnapshot = await firestore()
-        .collection(`accounts/${userId}/calories`)
-        .where('type', '==', 'input')
-        .get();
-
-      const calories = documentSnapshot.docs.map((doc) => doc.data() as CaloriesTracking);
-      setCaloriesConsumed(calories);
-    } catch (error) {
-      console.error('Error fetching dietary restrictions: ', error);
-    }
-  }
 
   const getMonthlyCalories = (caloriesConsumed: CaloriesTracking[]) => {
     const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
@@ -87,9 +55,23 @@ const CaloriesConsumedCard = ({ currentDate, setCurrentDate }: CaloriesConsumedC
   const chartData = getMonthlyCalories(caloriesConsumed); // Process fetched data
 
   useEffect(() => {
-    fetchCaloriesConsumed(currentDate);
-    fetchCaloriesConsumedOverall();
-  }, [currentDate]);
+    let unsubscribeConsumedToday: () => void;
+    let unsubscribeConsumedOverall: () => void;
+
+    (async () => {
+      unsubscribeConsumedToday = await fetchCaloriesConsumed(
+        currentDate,
+        userId,
+        setCaloriesConsumedToday
+      );
+      unsubscribeConsumedOverall = await fetchCaloriesConsumedOverall(userId, setCaloriesConsumed);
+    })();
+
+    return () => {
+      if (unsubscribeConsumedToday) unsubscribeConsumedToday();
+      if (unsubscribeConsumedOverall) unsubscribeConsumedOverall();
+    };
+  }, [currentDate, userId]);
 
   return (
     <View style={styles.container}>
@@ -125,10 +107,41 @@ const CaloriesConsumedCard = ({ currentDate, setCurrentDate }: CaloriesConsumedC
 
       {/* Card Content */}
       <View style={styles.card}>
-        <Text style={styles.title}>Calories Consumed</Text>
-        <Text style={styles.calories}>
-          {caloriesConsumedToday.reduce((acc, curr) => acc + curr.amount, 0)} kcal
-        </Text>
+        <View
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 10,
+          }}>
+          <View>
+            <Text style={styles.title}>Calories Consumed</Text>
+            <Text style={styles.calories}>
+              {Math.round(caloriesConsumedToday.reduce((acc, curr) => acc + curr.amount, 0) * 100) /
+                100}{' '}
+              kcal
+            </Text>
+          </View>
+          <View>
+            <Text
+              style={{
+                color: 'gray',
+                fontSize: 16,
+                fontWeight: 'bold',
+              }}>
+              Net Calories
+            </Text>
+            <Text
+              style={{
+                ...styles.orders,
+                color: netCaloriesConsumed > 0 ? '#1565C0' : '#FF5722', // Change color based on net calories
+                fontWeight: 'bold',
+              }}>
+              {Math.round(netCaloriesConsumed * 100) / 100} kcal
+            </Text>
+          </View>
+        </View>
 
         <LineChart
           data={{

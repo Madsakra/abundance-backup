@@ -1,10 +1,10 @@
 import { FontAwesome } from '@expo/vector-icons'; // For calendar icon
-import auth, { getAuth } from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 import React, { useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 
+import { fetchAllGlucoseReadingForToday } from '~/actions/actions';
 import { GlucoseReading } from '~/types/common/glucose';
 
 type CaloriesConsumedCardProps = {
@@ -26,42 +26,6 @@ const GlucoseGraphCard = ({ currentDate, setCurrentDate }: CaloriesConsumedCardP
     .split('-')
     .reverse()
     .join('/');
-
-  async function fetchCaloriesConsumed(timestamp: Date) {
-    const startOfDay = new Date(timestamp.setHours(0, 0, 0, 0)); // 00:00:00
-    const endOfDay = new Date(timestamp.setHours(23, 59, 59, 999)); // 23:59:59
-
-    const startTimestamp = firestore.Timestamp.fromDate(startOfDay);
-    const endTimestamp = firestore.Timestamp.fromDate(endOfDay);
-    const user = getAuth().currentUser;
-    const userId = user?.uid || '';
-
-    try {
-      const documentSnapshot = await firestore()
-        .collection(`accounts/${userId}/glucose-logs`)
-        .where('timestamp', '>=', startTimestamp)
-        .where('timestamp', '<=', endTimestamp)
-        .get();
-
-      const glucose = documentSnapshot.docs.map((doc) => doc.data() as GlucoseReading);
-      setGlucoseToday(glucose);
-    } catch (error) {
-      console.error('Error fetching caloreis consumed today: ', error);
-    }
-  }
-
-  async function fetchCaloriesConsumedOverall() {
-    try {
-      const documentSnapshot = await firestore()
-        .collection(`accounts/${userId}/glucose-logs`)
-        .get();
-
-      const glucose = documentSnapshot.docs.map((doc) => doc.data() as GlucoseReading);
-      setGlucoseOverall(glucose);
-    } catch (error) {
-      console.error('Error fetching dietary restrictions: ', error);
-    }
-  }
 
   const getMonthlyGlucoseData = (glucose: GlucoseReading[]) => {
     const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
@@ -89,9 +53,27 @@ const GlucoseGraphCard = ({ currentDate, setCurrentDate }: CaloriesConsumedCardP
   const chartData = getMonthlyGlucoseData(glucoseOverall); // Process fetched data
 
   useEffect(() => {
-    fetchCaloriesConsumed(currentDate);
-    fetchCaloriesConsumedOverall();
-  }, [currentDate]);
+    let unsubscribeGlucose: () => void;
+    let unsubscribeGlucoseOverall: () => void;
+
+    (async () => {
+      unsubscribeGlucose = await fetchAllGlucoseReadingForToday(
+        currentDate,
+        userId,
+        setGlucoseToday
+      );
+      unsubscribeGlucoseOverall = await fetchAllGlucoseReadingForToday(
+        currentDate,
+        userId,
+        setGlucoseOverall
+      );
+    })();
+
+    return () => {
+      if (unsubscribeGlucose) unsubscribeGlucose();
+      if (unsubscribeGlucoseOverall) unsubscribeGlucoseOverall();
+    };
+  }, [currentDate, userId]);
 
   return (
     <View style={styles.container}>
