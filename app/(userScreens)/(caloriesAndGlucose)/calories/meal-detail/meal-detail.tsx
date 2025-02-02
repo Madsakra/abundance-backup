@@ -1,5 +1,5 @@
 import Entypo from '@expo/vector-icons/Entypo';
-import { getAuth } from '@react-native-firebase/auth';
+import auth from '@react-native-firebase/auth';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
@@ -32,6 +32,8 @@ export default function MealDetail() {
   const [caloriesConsumed, setCaloriesConsumed] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const user = auth().currentUser;
+  const userID = user?.uid || '';
 
   const calculatedCalories = useMemo(() => {
     const calories = getCaloriesPerServing(item) * Number(caloriesConsumed);
@@ -74,7 +76,7 @@ export default function MealDetail() {
 
     try {
       await db
-        .collection(`accounts/${getAuth().currentUser?.uid}/calories`)
+        .collection(`accounts/${userID}/calories`)
         .add(data)
         .then(() => {
           toastSuccess('Uploaded Successfully');
