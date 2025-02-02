@@ -178,35 +178,12 @@ export default function syncWithSteps() {
                   <Feather name="settings" size={24} color="#C68F5E" />
                 </Pressable>
 
-<<<<<<< HEAD
-             
-              
-              <View style={{flex:1,justifyContent:"center",alignItems:"center"}}>
-                {
-                  androidPermissions.length !==6?
-                  <PermissionView
-                  subTitle='Some permission is required for us to collect your health connect data.'
-                  handleFunction={openHealthConnectSettings}
-                  buttonTitle='Grant Permission'
-                  image={require('assets/permission-img/health-connect.png')}
-                  themeColor='#C68F5E'
-                  subActionText='Check Permission'
-                  secondaryAction={reGrantPermission}
-                  />
-           
-                  :
-                    <View style={styles.container}>
-                      {
-                          loading?
-                          <LoadingAnimation/>:
-=======
                 <Databox
                   iconName="footsteps-sharp"
                   subjectName="Steps"
                   value={steps}
                   unit="steps"
                 />
->>>>>>> bf2460663c799a1d82f8ee2e532df59031cf0e7b
 
                 <Databox iconName="walk" subjectName="Distance" value={distance} unit="m" />
 
