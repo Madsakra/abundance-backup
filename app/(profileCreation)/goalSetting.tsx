@@ -1,9 +1,9 @@
 import { Entypo } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
-import firestore, { doc } from '@react-native-firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
-import { FlashList } from '@shopify/flash-list';
+
 import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -12,7 +12,7 @@ import { FlatList } from 'react-native-gesture-handler';
 import FunctionTiedButton from '~/components/FunctionTiedButton';
 import GoalTab from '~/components/GoalsTab';
 import LoadingAnimation from '~/components/LoadingAnimation';
-import PressableTab from '~/components/PressableTab';
+
 
 type Goal = {
   goalID:string,
@@ -61,9 +61,21 @@ export default function GoalSetting() {
   };
 
   const handleGoals = (newGoal: Goal) => {
+    // Check if the category of the new goal has already been selected
+    const goalCategory = newGoal.categoryID;
+    const isGoalAlreadySelected = profileGoals.some(
+      (goal) => goal.categoryID === goalCategory && goal.goalID !== newGoal.goalID
+    );
+  
+    // If another goal from the same category is selected, don't add the new goal
+    if (isGoalAlreadySelected) {
+      alert('You can only select one goal per category.');
+      return;
+    }
+  
     setProfileGoals((prevState) => {
       const exists = prevState.some((goal) => goal.goalID === newGoal.goalID);
-
+  
       if (exists) {
         return prevState.filter((goal) => goal.goalID !== newGoal.goalID);
       } else {
@@ -71,6 +83,7 @@ export default function GoalSetting() {
       }
     });
   };
+  
   const pushDataToFirebase = async () => {
     const profileData = await loadProfileData();
     console.log(profileData);

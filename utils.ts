@@ -85,7 +85,7 @@ export function toastSuccess(successMessage: string) {
 
 export function toastError(errorMessage: string) {
   toastRef.current?.hide(() => {
-    toastRef.current?.show(errorMessage, 'error', 300);
+    toastRef.current?.show(errorMessage, 'error', 500);
   });
 }
 

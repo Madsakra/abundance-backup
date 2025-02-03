@@ -1,55 +1,80 @@
 import { Entypo } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
-import { FlashList } from '@shopify/flash-list';
 import { Link, router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
-
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Checkbox, RadioButton } from 'react-native-paper';
 import FunctionTiedButton from '~/components/FunctionTiedButton';
-import PressableTab from '~/components/PressableTab';
+
+import { HealthProfileData, SelectedHealthProfile } from '~/types/common/health-condition';
 import { updateLocalProfileFields } from '~/utils';
 
-type Diet = {
-  id: string;
-  name: string;
-};
+
 
 export default function DietInfo() {
-  const [allDiets, setAllDiets] = useState<Diet[]>();
-
-  const [profileDiet, setProfileDiet] = useState<Diet[]>([]);
+  const [allDiets, setAllDiets] = useState<HealthProfileData[]>([]);
+  const [profileDiet, setProfileDiet] = useState<SelectedHealthProfile[]>([]);
 
   // CALL DB
   const loadAllDiets = async () => {
     try {
       const querySnapshot = await firestore().collection('dietary_restrictions').get();
 
-      const temp: Diet[] = querySnapshot.docs.map((documentSnapshot) => ({
+      const temp: HealthProfileData[] = querySnapshot.docs.map((documentSnapshot) => ({
         id: documentSnapshot.id,
         name: documentSnapshot.data().name,
+        variation:documentSnapshot.data().variation
       }));
-      setAllDiets(temp);
+         // Sort to ensure primary diets appear first
+        const sortedDiets = temp.sort((a, b) => {
+          // Consider 'primary' to be the primary diet
+          if (a.name === 'primary diet' && b.name !== 'primary diet') return -1;
+          if (b.name === 'primary diet' && a.name !== 'primary diet') return 1;
+          return 0;
+        });
+     
+    setAllDiets(sortedDiets);
+    
     } catch (error) {
       console.error('Error loading health conditions: ', error);
     }
   };
 
-  const handleDiet = (newDiet: Diet) => {
-    // set health condi if selected, unselect if tapped again
-    // also make sure no double entries
-    setProfileDiet((prevState) => {
-      // Check if the condition is already selected
-      const exists = prevState.some((oldDiet) => oldDiet.id === newDiet.id);
+  // Toggle function
+  const toggleCondition = (item: HealthProfileData) => {
+    if (item.name === 'allergies') {
+      // For allergies, allow multiple selections
+      setProfileDiet((prev) => {
+        const exists = prev.some((diet) => diet.id === item.id);
+        if (exists) {
+          // Remove allergy if it exists
+          return prev.filter((diet) => diet.id !== item.id);
+        } else {
+          // Add allergy if it doesn't exist
+          return [...prev, { id: item.id, name: item.name, variation: '' }];
+        }
+      });
+    } else {
+      // For other conditions, only one selection allowed
+      setProfileDiet((prev) => {
+        const exists = prev.some((diet) => diet.id === item.id);
+        if (exists) {
+          // Unselect the item (unselect variation for primary diets)
+          return prev.filter((diet) => diet.id !== item.id);
+        } else {
+          // Add the selected condition (with default variation)
+          return [...prev, { id: item.id, name: item.name, variation: '' }];
+        }
+      });
+    }
+  };
 
-      if (exists) {
-        // If it exists, remove it (deselect)
-        return prevState.filter((oldDiet) => oldDiet.id !== newDiet.id);
-      } else {
-        // If it doesn't exist, add it (select)
-        return [...prevState, newDiet];
-      }
-    });
+
+  const selectVariation = (conditionId: string, variation: string) => {
+    setProfileDiet((prev) =>
+      prev.map((condi) => (condi.id === conditionId ? { ...condi, variation } : condi))
+    );
   };
 
   // load pre-existing data , so user don't have to restart
@@ -63,6 +88,13 @@ export default function DietInfo() {
   };
 
   const nextSection = async () => {
+    const hasPrimaryDiet = profileDiet.some((diet) => diet.name === 'primary diet');
+
+    if (!hasPrimaryDiet) {
+      // Show a warning or alert if no primary diet is selected
+      alert('Please select at least one primary diet.');
+      return; // Prevent submitting
+    }
     // SEND DATA TO SQL LITE FIRST
     await updateLocalProfileFields({
       profileDiet,
@@ -75,6 +107,8 @@ export default function DietInfo() {
     loadAllDiets();
     loadProfileData();
   }, []);
+
+
 
   return (
     <ScrollView>
@@ -94,28 +128,39 @@ export default function DietInfo() {
         style={{ width: 100, height: 100, alignSelf: 'center', marginVertical: 20 }}
       />
 
-      {/*Dietary restriction section*/}
-      <View style={styles.listBox}>
-        <FlashList
-          data={allDiets}
-          extraData={profileDiet}
-          renderItem={({ item }) => (
-            <PressableTab
-              editable
-              isPressed={profileDiet.some(
-                (condition) => condition.id === item.id // Ensure you're comparing by id
-              )}
-              tabBoxStyle={styles.tabBox}
-              handleInfo={handleDiet}
-              tabTextStyle={styles.tabTextStyle}
-              tabValue={item}
-            />
-          )}
-          keyExtractor={(item) => item.id}
-          estimatedItemSize={100}
-          contentContainerStyle={styles.listContainer}
-        />
-      </View>
+      {allDiets.map((item) => {
+      const isSelected = profileDiet.some((diet) => diet.id === item.id);
+      const selectedVariation = profileDiet.find((diet) => diet.id === item.id)?.variation || '';
+
+        return (
+          <View key={item.id} style={{ marginBottom: 20 }}>
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 10,
+                backgroundColor: isSelected ? '#ddd' : '#f8f8f8',
+                borderRadius: 5
+              }}
+              onPress={() => toggleCondition(item)}
+            >
+              <Checkbox status={isSelected ? 'checked' : 'unchecked'} />
+              <Text style={{ fontSize: 16, marginLeft: 10 }}>{item.name}</Text>
+            </TouchableOpacity>
+
+            {isSelected && item.variation.length > 0 && (
+              <View style={{ paddingLeft: 30, marginTop: 5 }}>
+                {item.variation.map((variant) => (
+                  <TouchableOpacity key={variant} onPress={() => selectVariation(item.id, variant)} style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 5 }}>
+                    <RadioButton.Android value={variant} status={selectedVariation === variant ? 'checked' : 'unchecked'} onPress={() => selectVariation(item.id, variant)} />
+                    <Text style={{ fontSize: 14, marginLeft: 10 }}>{variant}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        );
+      })}
 
       <FunctionTiedButton
         buttonStyle={styles.buttonBox}

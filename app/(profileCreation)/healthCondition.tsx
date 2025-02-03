@@ -1,31 +1,28 @@
 import Entypo from '@expo/vector-icons/Entypo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
-import { FlashList } from '@shopify/flash-list';
 import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Checkbox, RadioButton } from 'react-native-paper';
 
 import FunctionTiedButton from '~/components/FunctionTiedButton';
-import PressableTab from '~/components/PressableTab';
+import { HealthProfileData, SelectedHealthProfile } from '~/types/common/health-condition';
 import { updateLocalProfileFields } from '~/utils';
 
-type HealthCondi = {
-  id: string;
-  name: string;
-};
 
 export default function HealthCondition() {
-  const [healthCondis, setHealthCondis] = useState<HealthCondi[]>([]);
-  const [profileHealthCondi, setProfileHealthCondi] = useState<HealthCondi[]>([]);
+  const [healthCondis, setHealthCondis] = useState<HealthProfileData[]>([]);
+  const [profileHealthCondi, setProfileHealthCondi] = useState<SelectedHealthProfile[]>([]);
 
   const loadHealthConditions = async () => {
     try {
       const querySnapshot = await firestore().collection('health_conditions').get();
 
-      const temp: HealthCondi[] = querySnapshot.docs.map((documentSnapshot) => ({
+      const temp: HealthProfileData[] = querySnapshot.docs.map((documentSnapshot) => ({
         id: documentSnapshot.id,
         name: documentSnapshot.data().name,
+        variation:documentSnapshot.data().variation
       }));
       setHealthCondis(temp);
     } catch (error) {
@@ -37,21 +34,18 @@ export default function HealthCondition() {
     loadHealthConditions();
   }, []);
 
-  const handleHealthCondi = (newHealthCondi: HealthCondi) => {
-    // set health condi if selected, unselect if tapped again
-    // also make sure no double entries
-    setProfileHealthCondi((prevState) => {
-      // Check if the condition is already selected
-      const exists = prevState.some((condition) => condition.id === newHealthCondi.id);
-
-      if (exists) {
-        // If it exists, remove it (deselect)
-        return prevState.filter((condition) => condition.id !== newHealthCondi.id);
-      } else {
-        // If it doesn't exist, add it (select)
-        return [...prevState, newHealthCondi];
-      }
+  const toggleCondition = (condition: HealthProfileData) => {
+    setProfileHealthCondi((prev) => {
+      const exists = prev.some((condi) => condi.id === condition.id);
+      return exists
+        ? prev.filter((condi) => condi.id !== condition.id) // Remove if already selected
+        : [...prev, { id: condition.id, name: condition.name, variation: '' }]; // Ensure name is included
     });
+  };
+  const selectVariation = (conditionId: string, variation: string) => {
+    setProfileHealthCondi((prev) =>
+      prev.map((condi) => (condi.id === conditionId ? { ...condi, variation } : condi))
+    );
   };
 
   // load pre-existing data , so user don't have to restart
@@ -93,28 +87,40 @@ export default function HealthCondition() {
         style={{ width: 100, height: 100, alignSelf: 'center', marginBottom: 20 }}
       />
 
-      {/*Health Conditions restriction section*/}
-      <View style={styles.listBox}>
-        <FlashList
-          data={healthCondis}
-          extraData={profileHealthCondi}
-          renderItem={({ item }) => (
-            <PressableTab
-              editable
-              isPressed={profileHealthCondi.some(
-                (condition) => condition.id === item.id // Ensure you're comparing by id
-              )}
-              tabBoxStyle={styles.tabBox}
-              handleInfo={handleHealthCondi}
-              tabTextStyle={styles.tabTextStyle}
-              tabValue={item}
-            />
-          )}
-          keyExtractor={(item) => item.id}
-          estimatedItemSize={100}
-          contentContainerStyle={styles.listContainer}
-        />
-      </View>
+        {healthCondis.map((condition) => {
+        const isSelected = profileHealthCondi.some((condi) => condi.id === condition.id);
+        const selectedVariation = profileHealthCondi.find((condi) => condi.id === condition.id)?.variation || '';
+
+        return (
+          <View key={condition.id} style={{ marginBottom: 20 }}>
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 10,
+                backgroundColor: isSelected ? '#ddd' : '#f8f8f8',
+                borderRadius: 5
+              }}
+              onPress={() => toggleCondition(condition)}
+            >
+              <Checkbox status={isSelected ? 'checked' : 'unchecked'} />
+              <Text style={{ fontSize: 16, marginLeft: 10 }}>{condition.name}</Text>
+            </TouchableOpacity>
+
+            {isSelected && condition.variation.length > 0 && (
+              <View style={{ paddingLeft: 30, marginTop: 5 }}>
+                {condition.variation.map((variant) => (
+                  <TouchableOpacity key={variant} onPress={() => selectVariation(condition.id, variant)} style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 5 }}>
+                    <RadioButton.Android value={variant} status={selectedVariation === variant ? 'checked' : 'unchecked'} onPress={() => selectVariation(condition.id, variant)} />
+                    <Text style={{ fontSize: 14, marginLeft: 10 }}>{variant}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        );
+      })}
+
 
       <FunctionTiedButton
         buttonStyle={styles.buttonBox}

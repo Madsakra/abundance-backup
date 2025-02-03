@@ -20,7 +20,18 @@ export default function BMRInformations() {
 
   const updateBMR = async (updateData: Partial<UserProfile>) => {
     try {
-      await firestore().collection('profiles').doc(user?.uid).update(updateData); // Update only specific fields
+
+      await firestore()
+      .collection('accounts')
+      .doc(user?.uid)
+      .collection('profile')
+      .doc('profile_info')
+      .update({
+        height:height,
+        weight:weight,
+      });
+      
+      // Update only specific fields
 
       console.log('Document successfully updated!');
     } catch (error) {

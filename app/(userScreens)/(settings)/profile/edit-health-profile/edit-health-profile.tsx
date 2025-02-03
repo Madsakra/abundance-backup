@@ -2,23 +2,24 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
+import { Checkbox, RadioButton } from 'react-native-paper';
 
 import LoadingAnimation from '~/components/LoadingAnimation';
 import { CustomAlert } from '~/components/alert-dialog/custom-alert-dialog';
 import { useUserProfile } from '~/ctx';
 import { Diet } from '~/types/common/diet';
-import { HealthCondition } from '~/types/common/health-condition';
+import { HealthProfileData, SelectedHealthProfile } from '~/types/common/health-condition';
 import { UserProfile } from '~/types/users/profile';
 import { colorViolet } from '~/utils';
 
 export default function EditHealthProfile() {
   const { profile, loading } = useUserProfile();
-  const [dietaryRestrictions, setDietaryRestrictions] = useState<Diet[]>([]);
-  const [healthConditions, setHealthConditions] = useState<HealthCondition[]>([]);
-  const [newDietaryRestrictions, setNewDietaryRestrictions] = useState<Diet[]>([]);
-  const [newHealthConditions, setNewHealthConditions] = useState<HealthCondition[]>([]);
+  const [dietaryRestrictions, setDietaryRestrictions] = useState<HealthProfileData[]>([]);
+  const [healthConditions, setHealthConditions] = useState<HealthProfileData[]>([]);
+  const [newDietaryRestrictions, setNewDietaryRestrictions] = useState<SelectedHealthProfile[]>([]);
+  const [newHealthConditions, setNewHealthConditions] = useState<SelectedHealthProfile[]>([]);
 
   const [isAlertVisible, setIsAlertVisible] = useState(false);
   const router = useRouter();
@@ -29,9 +30,12 @@ export default function EditHealthProfile() {
       try {
         const documentSnapshot = await firestore().collection('dietary_restrictions').get();
 
-        const dietaryRestrictions = documentSnapshot.docs.map((doc) => doc.data() as Diet);
+        const dietaryRestrictions = documentSnapshot.docs.map((doc)=>({
+          id:doc.id,
+          ...doc.data(),
+        }) as HealthProfileData);
         setDietaryRestrictions(dietaryRestrictions);
-        setNewDietaryRestrictions(profile?.profileDiet || []);
+        setNewDietaryRestrictions(profile!.profileDiet);
       } catch (error) {
         console.error('Error fetching dietary restrictions: ', error);
       }
@@ -41,9 +45,13 @@ export default function EditHealthProfile() {
       try {
         const documentSnapshot = await firestore().collection('health_conditions').get();
 
-        const healthConditions = documentSnapshot.docs.map((doc) => doc.data() as HealthCondition);
+        const healthConditions = documentSnapshot.docs.map((doc) => ({
+          id:doc.id,
+          ...doc.data()
+        }) as HealthProfileData);
+
         setHealthConditions(healthConditions);
-        setNewHealthConditions(profile?.profileHealthCondi || []);
+        setNewHealthConditions(profile!.profileHealthCondi);
       } catch (error) {
         console.error('Error fetching health conditions: ', error);
       }
@@ -52,6 +60,51 @@ export default function EditHealthProfile() {
     fetchDietaryRestrictions();
     fetchHealthConditions();
   }, [profile]);
+
+
+
+
+  const toggleCondition = (newItem: HealthProfileData,target:string) => {
+
+    if (target === "dietary_restriction")
+    {
+      setNewDietaryRestrictions((prev) => {
+        const isAlreadySelected = prev.some((item) => item.id === newItem.id);
+        
+        // If the condition is already selected, remove it from the state.
+        if (isAlreadySelected) {
+          return prev.filter((item) => item.id !== newItem.id);
+        }
+        
+        // If it's not selected, add it to the state.
+        return [...prev, { id: newItem.id, name: newItem.name, variation: '' }];
+      });
+    }
+
+    else{
+      setNewHealthConditions((prev) => {
+        const isAlreadySelected = prev.some((item) => item.id === newItem.id);
+        
+        // If the condition is already selected, remove it from the state.
+        if (isAlreadySelected) {
+          return prev.filter((item) => item.id !== newItem.id);
+        }
+        
+        // If it's not selected, add it to the state.
+        return [...prev, { id: newItem.id, name: newItem.name, variation: '' }];
+      });
+    }
+
+
+
+
+  };
+
+  const selectVariation = (conditionId: string, variation: string) => {
+    setNewDietaryRestrictions((prev) =>
+      prev.map((condi) => (condi.id === conditionId ? { ...condi, variation } : condi))
+    );
+  };
 
   const updateHealthProfile = async (updateData: Partial<UserProfile>) => {
     try {
@@ -123,60 +176,53 @@ export default function EditHealthProfile() {
           }}>
           Dietary Restrictions
         </Text>
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: 10,
-            marginHorizontal: 20,
-            padding: 20,
-            borderWidth: 1,
-            borderColor: 'gray',
-            borderRadius: 10,
-          }}>
-          {dietaryRestrictions.map((restriction, index) => (
-            <Pressable
-              onPress={() => {
-                setNewDietaryRestrictions((prev) => {
-                  const isExist = newDietaryRestrictions.some(
-                    (item) => item.name === restriction.name
-                  );
 
-                  if (isExist) {
-                    return prev.filter((item) => item.name !== restriction.name);
-                  }
+      {/*DIETARY RESTRICTIONS SELECTION*/}
+        {dietaryRestrictions.map((diet) => {
+        const isSelected = newDietaryRestrictions.some((newDiet) => diet.id === newDiet.id);
+        const selectedVariation = newDietaryRestrictions.find((newDiet) => newDiet.id === diet.id)?.variation || '';
 
-                  return [...prev, restriction];
-                });
-              }}
-              key={index}
+        return (
+          <View key={diet.id} style={{ marginBottom: 20 }}>
+            <TouchableOpacity
               style={{
-                padding: 15,
-                backgroundColor: newDietaryRestrictions.some(
-                  (item) => item.name === restriction.name
-                )
-                  ? colorViolet
-                  : 'gray',
-                borderRadius: 10,
-                width: '100%',
-                display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 10,
-              }}>
-              <Text
-                style={{
-                  color: 'white',
-                  fontSize: 16,
-                  paddingLeft: 20,
-                }}>
-                {restriction.name}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+                padding: 10,
+                backgroundColor: isSelected ? '#ddd' : '#f8f8f8',
+                borderRadius: 5,
+              }}
+              onPress={() => toggleCondition(diet,"dietary_restriction")}>
+              <Checkbox status={isSelected ? 'checked' : 'unchecked'} />
+              <Text style={{ fontSize: 16, marginLeft: 10 }}>{diet.name}</Text>
+            </TouchableOpacity>
+
+            {isSelected && diet.variation.length > 0 && (
+              <View style={{ paddingLeft: 30, marginTop: 5 }}>
+                {diet.variation.map((variant) => (
+                  <TouchableOpacity
+                    key={variant}
+                    onPress={() => selectVariation(diet.id, variant)}
+                    style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 5 }}>
+                    <RadioButton.Android
+                      value={variant}
+                      status={selectedVariation === variant ? 'checked' : 'unchecked'}
+                      onPress={() => selectVariation(diet.id, variant)}
+                    />
+                    <Text style={{ fontSize: 14, marginLeft: 10 }}>{variant}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        );
+      })}
+      </View>
+
+
+
+        {/*HEALTH CONDITION SELECTION*/}
+
         <Text
           style={{
             fontFamily: 'Poppins',
@@ -187,57 +233,50 @@ export default function EditHealthProfile() {
           Health Conditions
         </Text>
 
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: 10,
-            marginHorizontal: 20,
-            padding: 20,
-            borderWidth: 1,
-            borderColor: 'gray',
-            borderRadius: 10,
-            marginBottom: 50,
-          }}>
-          {healthConditions.map((condition, index) => (
-            <Pressable
-              onPress={() => {
-                setNewHealthConditions((prev) => {
-                  const isExist = newHealthConditions.some((item) => item.name === condition.name);
+      
+        {healthConditions.map((condi) => {
+        
+        const isSelected = newHealthConditions.some((newCondi) => condi.id === newCondi.id);
+        const selectedVariation = newHealthConditions.find((newCondi) => condi.id === newCondi.id)?.variation || '';
 
-                  if (isExist) {
-                    return prev.filter((item) => item.name !== condition.name);
-                  }
-
-                  return [...prev, condition];
-                });
-              }}
-              key={index}
+        return (
+          <View key={condi.id} style={{ marginBottom: 20 }}>
+            <TouchableOpacity
               style={{
-                padding: 15,
-                backgroundColor: newHealthConditions.some((item) => item.name === condition.name)
-                  ? colorViolet
-                  : 'gray',
-                borderRadius: 10,
-                width: '100%',
-                display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 10,
-              }}>
-              <Text
-                style={{
-                  color: 'white',
-                  fontSize: 16,
-                  paddingLeft: 20,
-                }}>
-                {condition.name}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+                padding: 10,
+                backgroundColor: isSelected ? '#ddd' : '#f8f8f8',
+                borderRadius: 5,
+              }}
+              onPress={() => toggleCondition(condi,"health_condition")}>
+              <Checkbox status={isSelected ? 'checked' : 'unchecked'} />
+              <Text style={{ fontSize: 16, marginLeft: 10 }}>{condi.name}</Text>
+            </TouchableOpacity>
+
+            {isSelected && condi.variation.length > 0 && (
+              <View style={{ paddingLeft: 30, marginTop: 5 }}>
+                {condi.variation.map((variant) => (
+                  <TouchableOpacity
+                    key={variant}
+                    onPress={() => selectVariation(condi.id, variant)}
+                    style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 5 }}>
+                    <RadioButton.Android
+                      value={variant}
+                      status={selectedVariation === variant ? 'checked' : 'unchecked'}
+                      onPress={() => selectVariation(condi.id, variant)}
+                    />
+                    <Text style={{ fontSize: 14, marginLeft: 10 }}>{variant}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        );
+      })}
+
+     
+
         <View
           style={{
             display: 'flex',
@@ -290,7 +329,7 @@ export default function EditHealthProfile() {
             </Text>
           </Pressable>
         </View>
-      </View>
+  
     </ScrollView>
   );
 }

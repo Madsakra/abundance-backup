@@ -9,7 +9,7 @@ import LoadingAnimation from '~/components/LoadingAnimation';
 import { PersonalInformation } from '~/components/profiles/personal-informations';
 import { useUserAccount, useUserProfile } from '~/ctx';
 import { Diet } from '~/types/common/diet';
-import { HealthCondition } from '~/types/common/health-condition';
+import { HealthCondition, HealthProfileData } from '~/types/common/health-condition';
 import { colorViolet } from '~/utils';
 
 export type PersonalInformationType = {
@@ -21,8 +21,8 @@ export default function Profile() {
   const { profile, loading } = useUserProfile();
   const { account } = useUserAccount();
 
-  const [dietaryRestrictions, setDietaryRestrictions] = useState<Diet[]>([]);
-  const [healthConditions, setHealthConditions] = useState<HealthCondition[]>([]);
+  const [dietaryRestrictions, setDietaryRestrictions] = useState<HealthProfileData[]>([]);
+  const [healthConditions, setHealthConditions] = useState<HealthProfileData[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export default function Profile() {
       try {
         const documentSnapshot = await firestore().collection('dietary_restrictions').get();
 
-        const dietaryRestrictions = documentSnapshot.docs.map((doc) => doc.data() as Diet);
+        const dietaryRestrictions = documentSnapshot.docs.map((doc) => doc.data() as HealthProfileData);
         setDietaryRestrictions(dietaryRestrictions);
       } catch (error) {
         console.error('Error fetching dietary restrictions: ', error);
@@ -41,7 +41,7 @@ export default function Profile() {
       try {
         const documentSnapshot = await firestore().collection('health_conditions').get();
 
-        const healthConditions = documentSnapshot.docs.map((doc) => doc.data() as HealthCondition);
+        const healthConditions = documentSnapshot.docs.map((doc) => doc.data() as HealthProfileData);
         setHealthConditions(healthConditions);
         console.log('Health conditions: ', healthConditions);
       } catch (error) {
@@ -276,6 +276,15 @@ export default function Profile() {
                 paddingLeft: 20,
               }}>
               {restriction.name}
+              {restriction.variation.length > 0 &&
+                restriction.variation
+                  .filter((variation) =>
+                    profile?.profileDiet.some(
+                      (item) => item.name === restriction.name && item.variation?.includes(variation)
+                    )
+                  )
+                  .map((variation, idx) => `- ${variation}${idx !== restriction.variation.length - 1 ? '\n' : ''}`)
+                  .join('')}
             </Text>
           </View>
         ))}
@@ -309,9 +318,7 @@ export default function Profile() {
             key={index}
             style={{
               padding: 15,
-              backgroundColor: profile?.profileHealthCondi.some(
-                (item) => item.name === condition.name
-              )
+              backgroundColor: profile?.profileHealthCondi.some((item) => item.name === condition.name)
                 ? colorViolet
                 : 'gray',
               borderRadius: 10,
@@ -328,6 +335,15 @@ export default function Profile() {
                 paddingLeft: 20,
               }}>
               {condition.name}
+              {condition.variation.length > 0 &&
+                condition.variation
+                  .filter((variation) =>
+                    profile?.profileHealthCondi.some(
+                      (item) => item.name === condition.name && item.variation?.includes(variation)
+                    )
+                  )
+                  .map((variation, idx) => `- ${variation}${idx !== condition.variation.length - 1 ? '\n' : ''}`)
+                  .join('')}
             </Text>
           </View>
         ))}
