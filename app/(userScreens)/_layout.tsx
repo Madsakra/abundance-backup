@@ -1,4 +1,4 @@
-import { AntDesign, Feather, FontAwesome } from '@expo/vector-icons';
+import { AntDesign, Feather, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import { DrawerContentScrollView, DrawerItem, DrawerItemList } from '@react-navigation/drawer';
 import { router } from 'expo-router';
@@ -147,6 +147,25 @@ const DrawerLayout = () => {
           drawerIcon: ({ size, color }) => <Feather name="settings" size={24} color={color} />,
         }}
       />
+
+  
+      <Drawer.Screen
+          name="(appReview)"
+          listeners={({ navigation }) => ({
+            drawerItemPress: (e) => {
+              // when user clicks on navigation, send them back to gateway
+              router.replace("/(userScreens)/(appReview)/viewAppReviews")
+            },
+          })}
+          
+          options={{
+            headerTitleAlign:'center',
+            headerTitle: 'App Review',
+            drawerLabel: 'App Review',
+            drawerIcon: ({ size, color }) => <MaterialCommunityIcons name="comment-text-multiple" size={size} color={color} />,
+          }}
+          />
+
     </Drawer>
   );
 };
