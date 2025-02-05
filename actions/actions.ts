@@ -34,6 +34,30 @@ export async function fetchCaloriesConsumed(
     );
 }
 
+export async function fetchCaloriesConsumedLatest(
+  userId: string,
+  setCaloriesComsumedLatest: (data: CaloriesTracking | null) => void
+): Promise<() => void> {
+  return firestore()
+    .collection(`accounts/${userId}/calories`)
+    .where('type', '==', 'input')
+    .orderBy('timestamp', 'desc')
+    .limit(1)
+    .onSnapshot(
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const calories = snapshot.docs[0].data() as CaloriesTracking;
+          setCaloriesComsumedLatest(calories);
+        } else {
+          setCaloriesComsumedLatest(null); // Set empty if no data found
+        }
+      },
+      (error) => {
+        console.error('Error fetching real-time calorie input:', error);
+      }
+    );
+}
+
 export async function fetchCaloriesOutput(
   timestamp: Date,
   userId: string,
@@ -151,4 +175,26 @@ export async function fetchGlucoseReadingsOverall(
     console.error('Error setting up real-time listener for glucose logs:', error);
     return () => {}; // Return an empty function in case of an error
   }
+}
+
+export async function fetchArticlesID(setArticles: (articles: any) => void): Promise<() => void> {
+  return firestore()
+    .collection('articles')
+    .onSnapshot(
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const articles = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          console.log('Articles:', articles);
+          setArticles(articles);
+        } else {
+          setArticles([]);
+        }
+      },
+      (error) => {
+        console.error('Error fetching latest articles:', error);
+      }
+    );
 }

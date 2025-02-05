@@ -1,4 +1,12 @@
-import { AntDesign, Feather, FontAwesome, Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import {
+  AntDesign,
+  Feather,
+  FontAwesome,
+  Ionicons,
+  MaterialCommunityIcons,
+  MaterialIcons,
+  Octicons,
+} from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import { DrawerContentScrollView, DrawerItem, DrawerItemList } from '@react-navigation/drawer';
 import { router } from 'expo-router';
@@ -116,7 +124,23 @@ const DrawerLayout = () => {
         }}
       />
 
-        <Drawer.Screen
+      <Drawer.Screen
+        name="(dataCoRelations)"
+        listeners={({ navigation }) => ({
+          drawerItemPress: () => {
+            // when user clicks on navigation, send them back to gateway
+            router.replace('/(userScreens)/(dataCoRelations)/relation-graph');
+          },
+        })}
+        options={{
+          headerTitleAlign: 'center',
+          headerTitle: 'Data Co-Relations',
+          drawerLabel: 'Data Co-Relations',
+          drawerIcon: ({ size, color }) => <Octicons name="graph" size={24} color={color} />,
+        }}
+      />
+
+      <Drawer.Screen
         name="(requestAdvice)"
         listeners={({ navigation }) => ({
           drawerItemPress: () => {
@@ -128,11 +152,13 @@ const DrawerLayout = () => {
           headerTitleAlign: 'center',
           headerTitle: 'Request Advice',
           drawerLabel: 'Request Advice',
-          drawerIcon: ({ size, color }) => <Ionicons name="nutrition-sharp" size={24} color="black" />,
+          drawerIcon: ({ size, color }) => (
+            <Ionicons name="nutrition-sharp" size={24} color="black" />
+          ),
         }}
       />
 
-    <Drawer.Screen
+      <Drawer.Screen
         name="(nutriAdvice)"
         listeners={({ navigation }) => ({
           drawerItemPress: () => {
@@ -144,10 +170,11 @@ const DrawerLayout = () => {
           headerTitleAlign: 'center',
           headerTitle: 'Nutritionist Feedback',
           drawerLabel: 'Nutritionist Feedback',
-          drawerIcon: ({ size, color }) => <MaterialIcons name="feedback" size={24} color="black" />
+          drawerIcon: ({ size, color }) => (
+            <MaterialIcons name="feedback" size={24} color="black" />
+          ),
         }}
       />
-  
 
       <Drawer.Screen
         name="(goals)"
@@ -181,24 +208,23 @@ const DrawerLayout = () => {
         }}
       />
 
-  
       <Drawer.Screen
-          name="(appReview)"
-          listeners={({ navigation }) => ({
-            drawerItemPress: (e) => {
-              // when user clicks on navigation, send them back to gateway
-              router.replace("/(userScreens)/(appReview)/viewAppReviews")
-            },
-          })}
-          
-          options={{
-            headerTitleAlign:'center',
-            headerTitle: 'App Review',
-            drawerLabel: 'App Review',
-            drawerIcon: ({ size, color }) => <MaterialCommunityIcons name="comment-text-multiple" size={size} color={color} />,
-          }}
-          />
-
+        name="(appReview)"
+        listeners={({ navigation }) => ({
+          drawerItemPress: (e) => {
+            // when user clicks on navigation, send them back to gateway
+            router.replace('/(userScreens)/(appReview)/viewAppReviews');
+          },
+        })}
+        options={{
+          headerTitleAlign: 'center',
+          headerTitle: 'App Review',
+          drawerLabel: 'App Review',
+          drawerIcon: ({ size, color }) => (
+            <MaterialCommunityIcons name="comment-text-multiple" size={size} color={color} />
+          ),
+        }}
+      />
     </Drawer>
   );
 };

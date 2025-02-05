@@ -1,8 +1,7 @@
 import { FontAwesome } from '@expo/vector-icons'; // For calendar icon
-import auth, { getAuth } from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 
 import { fetchCaloriesConsumed, fetchCaloriesConsumedOverall } from '~/actions/actions';
@@ -12,12 +11,16 @@ type CaloriesConsumedCardProps = {
   currentDate: Date;
   setCurrentDate: React.Dispatch<React.SetStateAction<Date>>;
   netCaloriesConsumed: number;
+  showDate?: boolean;
+  showNetCalories?: boolean;
 };
 
 const CaloriesConsumedCard = ({
   currentDate,
   setCurrentDate,
   netCaloriesConsumed,
+  showDate = true,
+  showNetCalories = true,
 }: CaloriesConsumedCardProps) => {
   // const [currentDate, setCurrentDate] = useState(new Date());
   const [caloriesConsumedToday, setCaloriesConsumedToday] = useState<CaloriesTracking[]>([]);
@@ -75,35 +78,39 @@ const CaloriesConsumedCard = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={{
-            padding: 10,
-          }}
-          onPress={() => {
-            setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)));
-          }}>
-          <FontAwesome name="chevron-left" size={18} color="black" />
-        </TouchableOpacity>
+      {showDate && (
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={{
+              padding: 10,
+            }}
+            onPress={() => {
+              setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)));
+            }}>
+            <FontAwesome name="chevron-left" size={18} color="black" />
+          </TouchableOpacity>
 
-        <View style={styles.dateContainer}>
-          <FontAwesome name="calendar" size={16} color="black" />
-          <Text style={styles.dateText}> {formatedCurrentDate} </Text>
+          <View style={styles.dateContainer}>
+            <FontAwesome name="calendar" size={16} color="black" />
+            <Text style={styles.dateText}> {formatedCurrentDate} </Text>
+          </View>
+
+          <TouchableOpacity
+            style={{
+              padding: 10,
+            }}
+            onPress={() => {
+              if (
+                currentDate.toISOString().split('T')[0] >= new Date().toISOString().split('T')[0]
+              ) {
+                return;
+              }
+              setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)));
+            }}>
+            <FontAwesome name="chevron-right" size={18} color="black" />
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={{
-            padding: 10,
-          }}
-          onPress={() => {
-            if (currentDate.toISOString().split('T')[0] > new Date().toISOString().split('T')[0]) {
-              return;
-            }
-            setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)));
-          }}>
-          <FontAwesome name="chevron-right" size={18} color="black" />
-        </TouchableOpacity>
-      </View>
+      )}
 
       {/* Card Content */}
       <View style={styles.card}>
@@ -123,24 +130,26 @@ const CaloriesConsumedCard = ({
               kcal
             </Text>
           </View>
-          <View>
-            <Text
-              style={{
-                color: 'gray',
-                fontSize: 16,
-                fontWeight: 'bold',
-              }}>
-              Net Calories
-            </Text>
-            <Text
-              style={{
-                ...styles.orders,
-                color: netCaloriesConsumed > 0 ? '#1565C0' : '#FF5722', // Change color based on net calories
-                fontWeight: 'bold',
-              }}>
-              {Math.round(netCaloriesConsumed * 100) / 100} kcal
-            </Text>
-          </View>
+          {showNetCalories && (
+            <View>
+              <Text
+                style={{
+                  color: 'gray',
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                }}>
+                Net Calories
+              </Text>
+              <Text
+                style={{
+                  ...styles.orders,
+                  color: netCaloriesConsumed > 0 ? '#1565C0' : '#FF5722', // Change color based on net calories
+                  fontWeight: 'bold',
+                }}>
+                {Math.round(netCaloriesConsumed * 100) / 100} kcal
+              </Text>
+            </View>
+          )}
         </View>
 
         <LineChart

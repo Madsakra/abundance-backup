@@ -1,6 +1,6 @@
 import { FontAwesome5 } from '@expo/vector-icons';
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { ProgressBar } from 'react-native-paper';
 
 import { colorViolet } from '~/utils';
@@ -10,6 +10,7 @@ type ProgressBarProps = {
   goalValue: number;
   title: string;
   iconName: string;
+  color?: string;
 };
 
 const BMIProgressBar: React.FC<ProgressBarProps> = ({
@@ -17,6 +18,7 @@ const BMIProgressBar: React.FC<ProgressBarProps> = ({
   goalValue,
   title,
   iconName,
+  color = colorViolet,
 }) => {
   const progress = Math.min(currentValue / goalValue, 1);
 
@@ -36,7 +38,7 @@ const BMIProgressBar: React.FC<ProgressBarProps> = ({
         {currentValue} / {goalValue}
       </Text>
 
-      <ProgressBar progress={progress} color={colorViolet} style={styles.progressBar} />
+      <ProgressBar progress={progress} color={color} style={styles.progressBar} />
     </View>
   );
 };

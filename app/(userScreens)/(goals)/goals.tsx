@@ -2,7 +2,7 @@ import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 import {
   fetchAllGlucoseReadingForToday,

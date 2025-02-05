@@ -138,7 +138,12 @@ export default function EditGoals() {
           <Pressable
             onPress={() => {
               setSelectedGoals((prev) => {
-                const isExist = selectedGoals.some((item) => item.max === goal.max);
+                const isExist = selectedGoals.some((item) => {
+                  if (item.categoryID === 'glucose') {
+                    return item.categoryID === goal.categoryID;
+                  }
+                  return item.max === goal.max;
+                });
 
                 if (isExist) {
                   return prev.filter((item) => item.max !== goal.max);
