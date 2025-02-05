@@ -7,12 +7,13 @@ import { LineChart } from 'react-native-chart-kit';
 import { fetchAllGlucoseReadingForToday } from '~/actions/actions';
 import { GlucoseReading } from '~/types/common/glucose';
 
-type CaloriesConsumedCardProps = {
+type GlucoseCardProps = {
   currentDate: Date;
   setCurrentDate: React.Dispatch<React.SetStateAction<Date>>;
+  showDate?: boolean;
 };
 
-const GlucoseGraphCard = ({ currentDate, setCurrentDate }: CaloriesConsumedCardProps) => {
+const GlucoseGraphCard = ({ currentDate, setCurrentDate, showDate = true }: GlucoseCardProps) => {
   // const [currentDate, setCurrentDate] = useState(new Date());
   const [glucoseToday, setGlucoseToday] = useState<GlucoseReading[]>([]);
   const [glucoseOverall, setGlucoseOverall] = useState<GlucoseReading[]>([]);
@@ -77,35 +78,39 @@ const GlucoseGraphCard = ({ currentDate, setCurrentDate }: CaloriesConsumedCardP
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={{
-            padding: 10,
-          }}
-          onPress={() => {
-            setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)));
-          }}>
-          <FontAwesome name="chevron-left" size={18} color="black" />
-        </TouchableOpacity>
+      {showDate && (
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={{
+              padding: 10,
+            }}
+            onPress={() => {
+              setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)));
+            }}>
+            <FontAwesome name="chevron-left" size={18} color="black" />
+          </TouchableOpacity>
 
-        <View style={styles.dateContainer}>
-          <FontAwesome name="calendar" size={16} color="black" />
-          <Text style={styles.dateText}> {formatedCurrentDate} </Text>
+          <View style={styles.dateContainer}>
+            <FontAwesome name="calendar" size={16} color="black" />
+            <Text style={styles.dateText}> {formatedCurrentDate} </Text>
+          </View>
+
+          <TouchableOpacity
+            style={{
+              padding: 10,
+            }}
+            onPress={() => {
+              if (
+                currentDate.toISOString().split('T')[0] > new Date().toISOString().split('T')[0]
+              ) {
+                return;
+              }
+              setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)));
+            }}>
+            <FontAwesome name="chevron-right" size={18} color="black" />
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={{
-            padding: 10,
-          }}
-          onPress={() => {
-            if (currentDate.toISOString().split('T')[0] > new Date().toISOString().split('T')[0]) {
-              return;
-            }
-            setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)));
-          }}>
-          <FontAwesome name="chevron-right" size={18} color="black" />
-        </TouchableOpacity>
-      </View>
+      )}
 
       {/* Card Content */}
       <View style={styles.card}>

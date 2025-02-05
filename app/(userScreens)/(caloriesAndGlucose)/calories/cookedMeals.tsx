@@ -27,7 +27,7 @@ export default function CookedMeals() {
     app_id: EDAMAM_APP_ID,
     app_key: EDAMAM_APP_KEY,
     imageSize: 'SMALL',
-    random: true,
+    random: false,
   };
 
   // Trigger a new search

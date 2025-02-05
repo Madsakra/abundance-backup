@@ -13,7 +13,7 @@ import ProgressCard from '~/components/cards/progress-card';
 import { useUserProfile } from '~/ctx';
 import { CaloriesOutputTracking, CaloriesTracking } from '~/types/common/calories';
 import { GlucoseReading } from '~/types/common/glucose';
-import { colorViolet } from '~/utils';
+import { colorGreen, colorViolet } from '~/utils';
 
 export default function Goals() {
   const { profile } = useUserProfile();

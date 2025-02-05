@@ -92,6 +92,7 @@ export function toastError(errorMessage: string) {
 export const colorViolet = '#6b7fd6';
 export const colorBrown = '#ca9769';
 export const colorPink = '#db8389';
+export const colorGreen = '#009797';
 
 export const capitalizeFirstLetter = (string: string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);

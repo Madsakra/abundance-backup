@@ -38,14 +38,7 @@ export default function GatewayCard({
 
         {/*Subsequent row*/}
         {routeLists.map((route, index) => {
-          return route.routeName === 'Food Logging' ? (
-            <FoodLogLink
-              key={index}
-              index={index}
-              image={route.image}
-              routeName={route.routeName}
-            />
-          ) : (
+          return (
             <Link
               href={route.routeRef}
               key={index}

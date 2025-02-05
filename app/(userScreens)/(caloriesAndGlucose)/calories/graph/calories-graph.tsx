@@ -53,8 +53,8 @@ export default function CaloriesGraph() {
     })();
 
     return () => {
-      if (unsubscribeConsumed) unsubscribeConsumed(); // ✅ Cleanup Firestore listener for consumed calories
-      if (unsubscribeOutput) unsubscribeOutput(); // ✅ Cleanup Firestore listener for output calories
+      if (unsubscribeConsumed) unsubscribeConsumed();
+      if (unsubscribeOutput) unsubscribeOutput();
     };
   }, [currentDate, userId]);
 
@@ -151,7 +151,7 @@ export default function CaloriesGraph() {
           {caloriesOutputToday.map((item, index) => (
             <SummaryCard
               key={index}
-              title={item.MET_task?.name as string || item.StepTrack?.name as string}
+              title={(item.MET_task?.name as string) || (item.StepTrack?.name as string)}
               calories={Math.round(item.amount * 100) / 100}
               image={
                 <Image

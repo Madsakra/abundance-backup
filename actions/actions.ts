@@ -34,6 +34,30 @@ export async function fetchCaloriesConsumed(
     );
 }
 
+export async function fetchCaloriesConsumedLatest(
+  userId: string,
+  setCaloriesComsumedLatest: (data: CaloriesTracking | null) => void
+): Promise<() => void> {
+  return firestore()
+    .collection(`accounts/${userId}/calories`)
+    .where('type', '==', 'input')
+    .orderBy('timestamp', 'desc')
+    .limit(1)
+    .onSnapshot(
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const calories = snapshot.docs[0].data() as CaloriesTracking;
+          setCaloriesComsumedLatest(calories);
+        } else {
+          setCaloriesComsumedLatest(null); // Set empty if no data found
+        }
+      },
+      (error) => {
+        console.error('Error fetching real-time calorie input:', error);
+      }
+    );
+}
+
 export async function fetchCaloriesOutput(
   timestamp: Date,
   userId: string,
