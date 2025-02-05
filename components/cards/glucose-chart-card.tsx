@@ -101,7 +101,7 @@ const GlucoseGraphCard = ({ currentDate, setCurrentDate, showDate = true }: Gluc
             }}
             onPress={() => {
               if (
-                currentDate.toISOString().split('T')[0] > new Date().toISOString().split('T')[0]
+                currentDate.toISOString().split('T')[0] >= new Date().toISOString().split('T')[0]
               ) {
                 return;
               }

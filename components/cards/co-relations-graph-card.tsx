@@ -124,7 +124,7 @@ const CaloriesGlucoseCorrelationCard = ({
             style={{ padding: 10 }}
             onPress={() => {
               if (
-                currentDate.toISOString().split('T')[0] > new Date().toISOString().split('T')[0]
+                currentDate.toISOString().split('T')[0] >= new Date().toISOString().split('T')[0]
               ) {
                 return;
               }
@@ -137,7 +137,7 @@ const CaloriesGlucoseCorrelationCard = ({
 
       {/* Card Content */}
       <View style={styles.card}>
-        <Text style={styles.title}>Calories vs Glucose Correlation</Text>
+        <Text style={styles.title}>Calories vs Glucose Corelations</Text>
 
         <LineChart
           data={{

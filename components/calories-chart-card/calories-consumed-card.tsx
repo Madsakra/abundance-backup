@@ -101,7 +101,7 @@ const CaloriesConsumedCard = ({
             }}
             onPress={() => {
               if (
-                currentDate.toISOString().split('T')[0] > new Date().toISOString().split('T')[0]
+                currentDate.toISOString().split('T')[0] >= new Date().toISOString().split('T')[0]
               ) {
                 return;
               }
