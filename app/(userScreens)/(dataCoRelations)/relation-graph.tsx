@@ -80,12 +80,14 @@ export default function RelationGraph() {
           title="Predict Glucose"
           description="Predict glucose with your data"
           imageKey="predictGlucose"
+          color={colorGreen}
         />
         <ActionCard
           href="/(userScreens)/(requestAdvice)/viewNutritionists"
           title="Request Feedback"
           description="Request Feedback from nutritionist"
           imageKey="requestFeedBack"
+          color={colorGreen}
         />
       </View>
       <Text

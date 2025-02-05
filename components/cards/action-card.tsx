@@ -9,9 +9,16 @@ type ActionCardProps = {
   title: string;
   description: string;
   imageKey: string;
+  color?: string;
 };
 
-export default function ActionCard({ href, title, description, imageKey }: ActionCardProps) {
+export default function ActionCard({
+  href,
+  title,
+  description,
+  imageKey,
+  color = colorBrown,
+}: ActionCardProps) {
   return (
     <Link href={href as RelativePathString}>
       <View
@@ -27,7 +34,7 @@ export default function ActionCard({ href, title, description, imageKey }: Actio
         }}>
         <Text
           style={{
-            color: colorBrown,
+            color,
             fontWeight: 'bold',
           }}>
           {title}
@@ -60,7 +67,7 @@ export default function ActionCard({ href, title, description, imageKey }: Actio
           </View>
           <Text
             style={{
-              color: colorBrown,
+              color,
               width: 120,
             }}>
             {description}
