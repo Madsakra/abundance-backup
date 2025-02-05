@@ -3,7 +3,7 @@ import firestore from '@react-native-firebase/firestore';
 import { useEffect, useState } from "react";
 import { NutritionistAccount } from "~/types/common/nutritionists";
 import LoadingAnimation from "~/components/LoadingAnimation";
-import { ScrollView } from "react-native-gesture-handler";
+import { Pressable, ScrollView } from "react-native-gesture-handler";
 import { FlashList } from "@shopify/flash-list";
 import NutritionistCard from "~/components/cards/nutritionist-card";
 
@@ -91,7 +91,9 @@ export default function ViewNutritionists() {
                     }
                     estimatedItemSize={200}
                     />
-
+                <Pressable style={{backgroundColor:"black",paddingVertical:12,flex:1,borderRadius:10,marginTop:20}} onPress={fetchNutritionist}>
+                    <Text style={{color:"white",fontWeight:"bold",textAlign:"center"}}>Refresh for new updates</Text>
+                </Pressable>
             </View>    
         }
     </ScrollView>

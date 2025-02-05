@@ -5,10 +5,8 @@ import { DisplayedReviews, NutritionistAccount, nutritionistProfile } from '~/ty
 import firestore from '@react-native-firebase/firestore';
 import LoadingAnimation from '~/components/LoadingAnimation';
 import Stars from '~/components/Stars';
-import FunctionTiedButton from '~/components/FunctionTiedButton';
 import { FontAwesome } from '@expo/vector-icons';
 import {  useUserAccount, useUserProfile } from '~/ctx';
-import { currentUser } from '~/utils';
 import auth from '@react-native-firebase/auth';
 
 export default function NutritionistDetail() {
@@ -84,14 +82,16 @@ export default function NutritionistDetail() {
               .collection("client_requests")
               .doc(userNowUID)
              
-
-
-
-              const personalRef = firestore()
+              // FOR USER'S OWN REFERENCE
+              const statusRef = firestore()
               .collection("accounts")
               .doc(userNowUID)
               .collection("tailored_advice")
               .doc(nutritionistInfo?.id)
+
+
+      
+              
       
             // Check if the document already exists
             const requestSnapshot = await requestDocRef.get();
@@ -103,12 +103,21 @@ export default function NutritionistDetail() {
               await requestDocRef.set(profile);
               if (account)
               {
-                await userAccountRef.set(account);
+                await userAccountRef.set({
+                  email:account.email,
+                  name:account.name,
+                  role:account.role,
+                });
               }
-              await personalRef.set({
-                pendingRequest:true,
-                ...nutritionistInfo,
+
+              
+               // FOR USER'S OWN REFERENCE
+              await statusRef.set({
+                status:"pending",
+                nutritionistInfo:nutritionistInfo
               })
+
+         
 
               alert(`Request for Advice sent to ${nutritionistInfo?.profile.title}`);
             }
@@ -152,7 +161,11 @@ export default function NutritionistDetail() {
                 }
             </View>
             <Text style={{alignSelf:"flex-start",marginBottom:18,fontSize:17,fontWeight:"bold"}}>All Reviews</Text>
-
+              {displayReviews?.length===0 &&
+              <View>
+                <Text>This Nutritionist Has No Reviews At the Moment</Text>
+                </View>
+              }
             {/* NOTE - CONVERT TO COMPONENT */}
             {displayReviews?.map((rev,index)=>(
                 <View style={{flex:1,padding:20,width:"100%",marginBottom:15,backgroundColor:"white"}} key={index}>
@@ -232,7 +245,8 @@ const styles = StyleSheet.create({
         flexDirection:"row",
         borderRadius:30,
         alignItems:"center",
-        gap:8
+        gap:8,
+        
     },
     sendButtonText:{
         color:"white",

@@ -8,7 +8,7 @@ const calorieLinks = {
   routeLists: [
     {
       image: require('assets/routeImages/calo_input.jpg'),
-      routeRef: '/' as RelativePathString,
+      routeRef: '/calories/cookedMeals' as RelativePathString,
       routeName: 'Food Logging',
     },
     {
