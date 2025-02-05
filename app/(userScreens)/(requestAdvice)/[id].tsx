@@ -7,8 +7,9 @@ import LoadingAnimation from '~/components/LoadingAnimation';
 import Stars from '~/components/Stars';
 import FunctionTiedButton from '~/components/FunctionTiedButton';
 import { FontAwesome } from '@expo/vector-icons';
-import {  useUserProfile } from '~/ctx';
+import {  useUserAccount, useUserProfile } from '~/ctx';
 import { currentUser } from '~/utils';
+import auth from '@react-native-firebase/auth';
 
 export default function NutritionistDetail() {
 
@@ -18,7 +19,7 @@ export default function NutritionistDetail() {
     const [displayReviews,setDisplayReviews] = useState<DisplayedReviews[]|null>([]);
     const [loading,setLoading] = useState(false);
     const {profile} = useUserProfile();
-
+    const {account} = useUserAccount()
 
     const fetchData = async ()=>{
         setLoading(true);
@@ -65,25 +66,50 @@ export default function NutritionistDetail() {
     const sendRequest = async () => {
         setLoading(true);
         const documentId = Array.isArray(id) ? id[0] : id;
-      
+        const userNowUID = auth().currentUser?.uid
+       
         try {
-          if (currentUser && profile) {
+          if (userNowUID && profile) {
             const requestDocRef = firestore()
               .collection("accounts")
               .doc(documentId)
               .collection("client_requests")
-              .doc(currentUser.uid)
+              .doc(userNowUID)
               .collection("profile")
               .doc("profile_info");
+
+              const userAccountRef = firestore()
+              .collection("accounts")
+              .doc(documentId)
+              .collection("client_requests")
+              .doc(userNowUID)
+             
+
+
+
+              const personalRef = firestore()
+              .collection("accounts")
+              .doc(userNowUID)
+              .collection("tailored_advice")
+              .doc(nutritionistInfo?.id)
       
             // Check if the document already exists
             const requestSnapshot = await requestDocRef.get();
-      
+            console.log(requestSnapshot);
             if (requestSnapshot.exists) {
               alert("You have already sent a request to this nutritionist.");
             } else {
               // If it doesn't exist, send the request
               await requestDocRef.set(profile);
+              if (account)
+              {
+                await userAccountRef.set(account);
+              }
+              await personalRef.set({
+                pendingRequest:true,
+                ...nutritionistInfo,
+              })
+
               alert(`Request for Advice sent to ${nutritionistInfo?.profile.title}`);
             }
           }
@@ -149,10 +175,10 @@ export default function NutritionistDetail() {
                 </View>
             ))}
         
-            <TouchableOpacity style={styles.sendButton} onPress={sendRequest}>
+            <Pressable style={styles.sendButton} onPress={()=>sendRequest()}>
                 <Text style={styles.sendButtonText}>Send Request</Text>
                 <FontAwesome name="send-o" size={18} color="white" />
-            </TouchableOpacity>
+            </Pressable>
         
         </View>
         }

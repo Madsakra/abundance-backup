@@ -100,10 +100,22 @@ export default function EditHealthProfile() {
 
   };
 
-  const selectVariation = (conditionId: string, variation: string) => {
-    setNewDietaryRestrictions((prev) =>
-      prev.map((condi) => (condi.id === conditionId ? { ...condi, variation } : condi))
-    );
+  const selectVariation = (conditionId: string, variation: string,target:string) => {
+
+    if (target === "dietary_restriction")
+    {
+      setNewDietaryRestrictions((prev) =>
+        prev.map((condi) => (condi.id === conditionId ? { ...condi, variation } : condi))
+      );
+    }
+
+  
+    else{
+      setNewHealthConditions((prev) =>
+        prev.map((condi) => (condi.id === conditionId ? { ...condi, variation } : condi))
+      );
+    }
+    
   };
 
   const updateHealthProfile = async (updateData: Partial<UserProfile>) => {
@@ -202,12 +214,12 @@ export default function EditHealthProfile() {
                 {diet.variation.map((variant) => (
                   <TouchableOpacity
                     key={variant}
-                    onPress={() => selectVariation(diet.id, variant)}
+                    onPress={() => selectVariation(diet.id, variant,"dietary_restriction")}
                     style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 5 }}>
                     <RadioButton.Android
                       value={variant}
                       status={selectedVariation === variant ? 'checked' : 'unchecked'}
-                      onPress={() => selectVariation(diet.id, variant)}
+                      onPress={() => selectVariation(diet.id, variant,"dietary_restriction")}
                     />
                     <Text style={{ fontSize: 14, marginLeft: 10 }}>{variant}</Text>
                   </TouchableOpacity>
@@ -259,12 +271,12 @@ export default function EditHealthProfile() {
                 {condi.variation.map((variant) => (
                   <TouchableOpacity
                     key={variant}
-                    onPress={() => selectVariation(condi.id, variant)}
+                    onPress={() => selectVariation(condi.id, variant,"health")}
                     style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 5 }}>
                     <RadioButton.Android
                       value={variant}
                       status={selectedVariation === variant ? 'checked' : 'unchecked'}
-                      onPress={() => selectVariation(condi.id, variant)}
+                      onPress={() => selectVariation(condi.id, variant,"health")}
                     />
                     <Text style={{ fontSize: 14, marginLeft: 10 }}>{variant}</Text>
                   </TouchableOpacity>

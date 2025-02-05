@@ -1,4 +1,4 @@
-import { AntDesign, Feather, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { AntDesign, Feather, FontAwesome, Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import { DrawerContentScrollView, DrawerItem, DrawerItemList } from '@react-navigation/drawer';
 import { router } from 'expo-router';
@@ -126,9 +126,25 @@ const DrawerLayout = () => {
         })}
         options={{
           headerTitleAlign: 'center',
-          headerTitle: 'Nutritionist advice',
-          drawerLabel: 'Nutritionist adivice',
+          headerTitle: 'Request Advice',
+          drawerLabel: 'Request Advice',
           drawerIcon: ({ size, color }) => <Ionicons name="nutrition-sharp" size={24} color="black" />,
+        }}
+      />
+
+    <Drawer.Screen
+        name="(nutriAdvice)"
+        listeners={({ navigation }) => ({
+          drawerItemPress: () => {
+            // when user clicks on navigation, send them back to gateway
+            router.replace('/(userScreens)/(nutriAdvice)/allFeedback');
+          },
+        })}
+        options={{
+          headerTitleAlign: 'center',
+          headerTitle: 'Nutritionist Feedback',
+          drawerLabel: 'Nutritionist Feedback',
+          drawerIcon: ({ size, color }) => <MaterialIcons name="feedback" size={24} color="black" />
         }}
       />
   
