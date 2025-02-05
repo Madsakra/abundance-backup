@@ -95,7 +95,7 @@ export default function NutritionistDetail() {
       
             // Check if the document already exists
             const requestSnapshot = await requestDocRef.get();
-            console.log(requestSnapshot);
+
             if (requestSnapshot.exists) {
               alert("You have already sent a request to this nutritionist.");
             } else {

@@ -168,8 +168,8 @@ const DrawerLayout = () => {
         })}
         options={{
           headerTitleAlign: 'center',
-          headerTitle: 'Nutritionist Feedback',
-          drawerLabel: 'Nutritionist Feedback',
+          headerTitle: 'Returned Advice',
+          drawerLabel: 'Returned Advice',
           drawerIcon: ({ size, color }) => (
             <MaterialIcons name="feedback" size={24} color="black" />
           ),

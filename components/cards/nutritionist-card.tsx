@@ -12,7 +12,6 @@ interface NutritionistCardProps{
 export default function NutritionistCard({item}:NutritionistCardProps) {
   return (
                     <View style={styles.nutritionistBar}>
-                        
                            <View style={{flexDirection:"row",gap:10,alignItems:"center"}}>
                            <Image source={{uri:item?.profile?.avatar}} style={styles.avatar}/>
                             <View>

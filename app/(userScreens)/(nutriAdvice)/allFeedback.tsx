@@ -2,20 +2,17 @@ import React, { useEffect, useState } from 'react'
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import auth from '@react-native-firebase/auth';
 import firestore, { onSnapshot } from '@react-native-firebase/firestore';
-import { NutritionistAccount } from '~/types/common/nutritionists';
+import {  StatusFeedbackDisplay } from '~/types/common/nutritionists';
 import { FlashList } from '@shopify/flash-list';
+import AdviceStatus from '~/components/cards/advice-status';
 
-interface DisplayAccount {
-  nutritionistInfo:NutritionistAccount,
-  status:string
-}
+
 
 
 export default function AllFeedback() {
 
 
-  const userNowUID = auth().currentUser?.uid;
-  const [advices,setAdvices] = useState<DisplayAccount[]>([])
+  const [advices,setAdvices] = useState<StatusFeedbackDisplay[]>([])
 
 
   useEffect(()=>{
@@ -27,10 +24,10 @@ export default function AllFeedback() {
   
 
     const unsubscribe = onSnapshot(userDocRef,(querySnapshot)=>{
-      const adviceList:DisplayAccount[] = [];
+      const adviceList:StatusFeedbackDisplay[] = [];
       querySnapshot.forEach((doc)=>{
         const data = doc.data();
-        adviceList.push(data as DisplayAccount)
+        adviceList.push(data as StatusFeedbackDisplay)
       })
 
       setAdvices(adviceList);
@@ -49,35 +46,14 @@ export default function AllFeedback() {
         <FlashList
         data={advices}
         renderItem={({ item }) => (
-          <View style={{padding:20,backgroundColor:"white"}}>
-            <View style={{flexDirection:"row",gap:20,alignItems:"center",flexWrap:"wrap"}}>
-            <Image source={{uri:item.nutritionistInfo?.profile?.avatar}} style={{borderRadius:50,height:60,width:60}}/>
-            <View>
-            <Text>Nutritionist: {item.nutritionistInfo?.profile.title}</Text>
-            {item.status==="pending" &&
-            <Text style={{marginTop:5,color:"#FBA518"}}>Request Status: {item.status}</Text>            
-            }
-            {item.status==="complete" &&
-            <Text style={{marginTop:5,color:"#77B254"}}>Request Status: {item.status}</Text>            
-            }
-            </View>
-            </View>
-            {item.status==="pending" &&
-            <Pressable disabled style={{padding:15,backgroundColor:"#D9D9D9",marginTop:20,borderRadius:50}}>
-              <Text style={{textAlign:"center",fontWeight:"700"}}>Working on it....</Text>
-            </Pressable>
-            }
-            {item.status==="complete" &&
-            <Pressable disabled style={{padding:15,backgroundColor:"#00ACAC",marginTop:20,borderRadius:50}}>
-              <Text style={{textAlign:"center",fontWeight:"700",color:"white"}}>See Advice</Text>
-            </Pressable>
-            }
-          </View>
+          <AdviceStatus
+          item={item}
+          />
         )}
         estimatedItemSize={200}
       />
 
-
+        
 
     </ScrollView>
   )

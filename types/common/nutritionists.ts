@@ -27,3 +27,21 @@ export type DisplayedReviews = {
   reasons: string[];
   score: number;
 };
+
+export interface StatusFeedbackDisplay {
+  nutritionistInfo:NutritionistAccount,
+  status:string
+}
+
+export interface AdviceInformation {
+  title:string,
+  content:string,
+  goalAdvice:string,
+  mealPlans:{
+    calories:{quantity:number,unit:string},
+    fats:{quantity:number,unit:string},
+    carbs:{quantity:number,unit:string},
+    protein:{quantity:number,unit:string},
+    label:string,
+  }[],
+}
