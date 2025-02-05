@@ -30,25 +30,25 @@ const GlucoseGraphCard = ({ currentDate, setCurrentDate, showDate = true }: Gluc
 
   const getMonthlyGlucoseData = (glucose: GlucoseReading[]) => {
     const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    const monthlyCalories: { [key: string]: number } = {};
+    const monthlyGlucose: { [key: string]: number } = {};
 
     // Initialize monthly data
-    monthLabels.forEach((month) => (monthlyCalories[month] = 0));
+    monthLabels.forEach((month) => (monthlyGlucose[month] = 0));
 
     glucose.forEach((entry) => {
       const date = entry.timestamp;
       const monthName = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
 
-      if (monthlyCalories[monthName] !== undefined) {
+      if (monthlyGlucose[monthName] !== undefined) {
         // Convert reading unit to mmol/L
         if (entry.unit === 'mg/dL') {
           entry.reading = entry.reading / 18.0182;
         }
-        monthlyCalories[monthName] += entry.reading || 0; // Sum calorie values
+        monthlyGlucose[monthName] += entry.reading || 0; // Sum calorie values
       }
     });
 
-    return monthLabels.map((month) => monthlyCalories[month]);
+    return monthLabels.map((month) => monthlyGlucose[month]);
   };
 
   const chartData = getMonthlyGlucoseData(glucoseOverall); // Process fetched data

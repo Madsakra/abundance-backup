@@ -176,3 +176,25 @@ export async function fetchGlucoseReadingsOverall(
     return () => {}; // Return an empty function in case of an error
   }
 }
+
+export async function fetchArticlesID(setArticles: (articles: any) => void): Promise<() => void> {
+  return firestore()
+    .collection('articles')
+    .onSnapshot(
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const articles = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          console.log('Articles:', articles);
+          setArticles(articles);
+        } else {
+          setArticles([]);
+        }
+      },
+      (error) => {
+        console.error('Error fetching latest articles:', error);
+      }
+    );
+}

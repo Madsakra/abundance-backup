@@ -1,8 +1,7 @@
 import { FontAwesome } from '@expo/vector-icons'; // For calendar icon
-import auth, { getAuth } from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 
 import { fetchCaloriesConsumed, fetchCaloriesConsumedOverall } from '~/actions/actions';

@@ -6,11 +6,9 @@ export interface UserAccount {
   role: UserRole;
 }
 
-
 export interface UserMembership {
-  membershipID:string,
-  currency:string,
-  tier_name:string,
-  value:number,
-
+  membershipID: string;
+  currency: string;
+  tier_name: string;
+  value: number;
 }

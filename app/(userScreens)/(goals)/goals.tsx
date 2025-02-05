@@ -2,7 +2,7 @@ import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 import {
   fetchAllGlucoseReadingForToday,
@@ -13,7 +13,7 @@ import ProgressCard from '~/components/cards/progress-card';
 import { useUserProfile } from '~/ctx';
 import { CaloriesOutputTracking, CaloriesTracking } from '~/types/common/calories';
 import { GlucoseReading } from '~/types/common/glucose';
-import { colorGreen, colorViolet } from '~/utils';
+import { colorViolet } from '~/utils';
 
 export default function Goals() {
   const { profile } = useUserProfile();

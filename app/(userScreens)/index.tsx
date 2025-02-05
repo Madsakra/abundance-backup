@@ -8,6 +8,7 @@ import {
   fetchCaloriesConsumed,
   fetchCaloriesConsumedLatest,
   fetchCaloriesOutput,
+  fetchArticlesID,
 } from '~/actions/actions';
 import FunctionTiedButton from '~/components/FunctionTiedButton';
 import CaloriesConsumedCard from '~/components/calories-chart-card/calories-consumed-card';
@@ -35,6 +36,8 @@ export default function Index() {
 
   const [totalGlucoseToday, setTotalGlucoseToday] = useState<GlucoseReading[]>([]);
 
+  const [articleID, setArticleID] = useState([]);
+
   const totalCaloriesConsumed = caloriesConsumedToday.reduce((acc, item) => acc + item.amount, 0);
   const totalGlucose = totalGlucoseToday.reduce((acc, curr) => acc + curr.reading, 0);
 
@@ -47,6 +50,7 @@ export default function Index() {
     let unsubscribeLatestConsumed: () => void;
     let unsubscribeCaloriesOutput: () => void;
     let unsubscribeGlucose: () => void;
+    let unsubscribeArticles: () => void;
 
     (async () => {
       unsubscribeConsumed = await fetchCaloriesConsumed(
@@ -68,6 +72,7 @@ export default function Index() {
         userId,
         setTotalGlucoseToday
       );
+      unsubscribeArticles = await fetchArticlesID(setArticleID);
     })();
 
     return () => {
@@ -75,6 +80,7 @@ export default function Index() {
       if (unsubscribeLatestConsumed) unsubscribeLatestConsumed();
       if (unsubscribeCaloriesOutput) unsubscribeCaloriesOutput();
       if (unsubscribeGlucose) unsubscribeGlucose();
+      if (unsubscribeArticles) unsubscribeArticles();
     };
   }, [currentDate, userId]);
 

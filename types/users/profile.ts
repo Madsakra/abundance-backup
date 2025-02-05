@@ -1,4 +1,3 @@
-import { Diet } from '../common/diet';
 import { Goal } from '../common/goal';
 import { SelectedHealthProfile } from '../common/health-condition';
 
