@@ -102,6 +102,8 @@ export const imageMap: Record<string, any> = {
   caloriesInput: require('~/assets/routeImages/calo_input.jpg'),
   caloriesOutput: require('~/assets/routeImages/calo_output.jpg'),
   glucoseInput: require('~/assets/routeImages/glucose_log.jpg'),
+  predictGlucose: require('~/assets/routeImages/chart_data.jpg'),
+  requestFeedBack: require('~/assets/profileCreation/health_condi.jpg'),
 };
 
 export const formatFirestoreTimestamp = (timestamp: FirebaseFirestoreTypes.Timestamp): string => {

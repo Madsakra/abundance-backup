@@ -129,7 +129,7 @@ const DrawerLayout = () => {
         listeners={({ navigation }) => ({
           drawerItemPress: () => {
             // when user clicks on navigation, send them back to gateway
-            router.replace('/(userScreens)/(dataCoRelations)/graph');
+            router.replace('/(userScreens)/(dataCoRelations)/relation-graph');
           },
         })}
         options={{

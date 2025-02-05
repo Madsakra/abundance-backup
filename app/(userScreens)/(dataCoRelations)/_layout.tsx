@@ -6,8 +6,8 @@ export default function Layout() {
       screenOptions={{
         headerShown: false,
       }}
-      initialRouteName="graph">
-      <Stack.Screen name="graph" />
+      initialRouteName="relation-graph">
+      <Stack.Screen name="relation-graph" />
     </Stack>
   );
 }
