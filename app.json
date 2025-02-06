@@ -17,27 +17,25 @@
           "launchMode": "most-recent"
         }
       ],
-        "expo-health-connect",
+      "expo-health-connect",
+      "react-native-health",
       "react-native-health-connect",
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
       "expo-secure-store",
       "./androidManifestPlugin.js",
- 
       [
         "expo-sensors",
         {
           "motionPermission": "Allow Abundance to access your device motion"
         }
       ],
-
       [
-        "react-native-vision-camera",  
-          {
-            "cameraPermissionText": "Abundance needs access to your Camera."
-          }
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "Abundance needs access to your Camera."
+        }
       ],
-
       [
         "expo-build-properties",
         {
@@ -51,9 +49,6 @@
           }
         }
       ]
-
- 
-      
     ],
     "experiments": {
       "typedRoutes": true,

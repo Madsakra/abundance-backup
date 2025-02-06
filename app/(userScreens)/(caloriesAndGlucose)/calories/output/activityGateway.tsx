@@ -23,6 +23,18 @@ export default function activityGateway() {
           </Link>
         )}
 
+        {Platform.OS === 'ios' && (
+          <Link
+            href="/(userScreens)/(caloriesAndGlucose)/calories/output/ios_sync/steps-sync-ios"
+            style={{ marginTop: 30 }}>
+            <View style={styles.linkInnerContainer}>
+              <AntDesign name="mobile1" size={25} color="#C68F5E" />
+              <Text style={styles.linkText}>Sync with Apple Health</Text>
+              <AntDesign name="arrowright" size={25} color="black" />
+            </View>
+          </Link>
+        )}
+
         <Link
           href="/(userScreens)/(caloriesAndGlucose)/calories/output/MET_task/metabolicEqui"
           style={{ marginTop: 20 }}>
