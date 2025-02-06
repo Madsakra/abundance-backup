@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 
-import { fetchCaloriesConsumedOverall, fetchAllGlucoseReadingForToday } from '~/actions/actions';
+import { fetchCaloriesConsumedOverall, fetchGlucoseReadingsOverall } from '~/actions/actions';
 import { CaloriesTracking } from '~/types/common/calories';
 import { GlucoseReading } from '~/types/common/glucose';
 
@@ -88,11 +88,7 @@ const CaloriesGlucoseCorrelationCard = ({
 
     (async () => {
       unsubscribeCalories = await fetchCaloriesConsumedOverall(userId, setCaloriesConsumed);
-      unsubscribeGlucose = await fetchAllGlucoseReadingForToday(
-        currentDate,
-        userId,
-        setGlucoseOverall
-      );
+      unsubscribeGlucose = await fetchGlucoseReadingsOverall(userId, setGlucoseOverall);
     })();
 
     return () => {

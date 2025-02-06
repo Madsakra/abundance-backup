@@ -1,12 +1,12 @@
 import auth from '@react-native-firebase/auth';
 import { useEffect, useState } from 'react';
-import { ScrollView, Text, View, Image } from 'react-native';
+import { Image, ScrollView, Text, View } from 'react-native';
+
 import {
   fetchAllGlucoseReadingForToday,
   fetchCaloriesConsumed,
   fetchCaloriesOutput,
 } from '~/actions/actions';
-
 import ActionCard from '~/components/cards/action-card';
 import CaloriesGlucoseCorrelationCard from '~/components/cards/co-relations-graph-card';
 import SummaryCard from '~/components/cards/summary-card';

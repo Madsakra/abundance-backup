@@ -1,14 +1,14 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 import {
   fetchAllGlucoseReadingForToday,
   fetchCaloriesConsumed,
   fetchCaloriesConsumedLatest,
   fetchCaloriesOutput,
-  fetchArticlesID,
 } from '~/actions/actions';
 import FunctionTiedButton from '~/components/FunctionTiedButton';
 import CaloriesConsumedCard from '~/components/calories-chart-card/calories-consumed-card';
@@ -36,8 +36,6 @@ export default function Index() {
 
   const [totalGlucoseToday, setTotalGlucoseToday] = useState<GlucoseReading[]>([]);
 
-  const [articleID, setArticleID] = useState([]);
-
   const totalCaloriesConsumed = caloriesConsumedToday.reduce((acc, item) => acc + item.amount, 0);
   const totalGlucose = totalGlucoseToday.reduce((acc, curr) => acc + curr.reading, 0);
 
@@ -50,7 +48,6 @@ export default function Index() {
     let unsubscribeLatestConsumed: () => void;
     let unsubscribeCaloriesOutput: () => void;
     let unsubscribeGlucose: () => void;
-    let unsubscribeArticles: () => void;
 
     (async () => {
       unsubscribeConsumed = await fetchCaloriesConsumed(
@@ -72,7 +69,6 @@ export default function Index() {
         userId,
         setTotalGlucoseToday
       );
-      unsubscribeArticles = await fetchArticlesID(setArticleID);
     })();
 
     return () => {
@@ -80,7 +76,6 @@ export default function Index() {
       if (unsubscribeLatestConsumed) unsubscribeLatestConsumed();
       if (unsubscribeCaloriesOutput) unsubscribeCaloriesOutput();
       if (unsubscribeGlucose) unsubscribeGlucose();
-      if (unsubscribeArticles) unsubscribeArticles();
     };
   }, [currentDate, userId]);
 
