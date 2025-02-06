@@ -17,27 +17,24 @@
           "launchMode": "most-recent"
         }
       ],
-        "expo-health-connect",
+      "expo-health-connect",
       "react-native-health-connect",
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
       "expo-secure-store",
       "./androidManifestPlugin.js",
- 
       [
         "expo-sensors",
         {
           "motionPermission": "Allow Abundance to access your device motion"
         }
       ],
-
       [
-        "react-native-vision-camera",  
-          {
-            "cameraPermissionText": "Abundance needs access to your Camera."
-          }
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "Abundance needs access to your Camera."
+        }
       ],
-
       [
         "expo-build-properties",
         {
@@ -51,9 +48,6 @@
           }
         }
       ]
-
- 
-      
     ],
     "experiments": {
       "typedRoutes": true,
@@ -73,7 +67,11 @@
     "ios": {
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
-      "bundleIdentifier": "com.axmen.abundancebackup"
+      "bundleIdentifier": "com.axmen.abundancebackup",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Abundance needs access to your Camera.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -87,7 +85,8 @@
         "android.permission.health.READ_FLOORS_CLIMBED",
         "android.permission.health.READ_DISTANCE",
         "android.permission.health.READ_TOTAL_CALORIES_BURNED",
-        "android.permission.health.READ_ACTIVE_CALORIES_BURNED"
+        "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
+        "android.permission.CAMERA"
       ]
     },
     "extra": {

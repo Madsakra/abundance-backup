@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import {ScrollView, StyleSheet, Text, View } from 'react-native'
 import auth from '@react-native-firebase/auth';
 import firestore, { onSnapshot } from '@react-native-firebase/firestore';
 import {  StatusFeedbackDisplay } from '~/types/common/nutritionists';

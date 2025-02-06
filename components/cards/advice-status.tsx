@@ -1,7 +1,10 @@
 import { router } from 'expo-router'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import { StatusFeedbackDisplay } from '~/types/common/nutritionists'
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+import { MaterialIcons } from '@expo/vector-icons';
 
 
 type AdviceStatusProps = {
@@ -11,6 +14,36 @@ type AdviceStatusProps = {
 
 
 export default function AdviceStatus({item}:AdviceStatusProps) {
+
+    const user = auth().currentUser;
+    const [reviewd,setReviewd] = useState(false);
+
+    const checkReview = async()=>{
+        if (user)
+        {
+            const reviewDoc = await firestore().collection('accounts').doc(user.uid).collection('nutritionist_reviews').doc(item.nutritionistInfo.id).get();
+            if (reviewDoc.exists)
+            {
+                setReviewd(true);
+            }
+        }
+    };
+
+      const seeNext = ()=>{
+            router.navigate({
+                pathname: '/reviewNutri',
+                params: {
+                    displayInfo: JSON.stringify(item),
+    
+                }
+            }
+            )
+         }
+
+         useEffect(()=>{
+            checkReview();
+         },[])
+    
   return (
           <View style={styles.container}>
             <View style={styles.row}>
@@ -22,7 +55,11 @@ export default function AdviceStatus({item}:AdviceStatusProps) {
             <Text style={{marginTop:5,color:"#FBA518"}}>Request Status: {item.status}</Text>            
             }
             </View>
-
+            {reviewd &&
+                <Pressable onPress={seeNext}>
+                    <MaterialIcons name="reviews" size={24} color="#00ACAC" style={{marginLeft:15}} />
+                </Pressable>            
+            }
             
             </View>
             {item.status==="complete"?

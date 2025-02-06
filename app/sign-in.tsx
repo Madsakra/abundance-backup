@@ -37,12 +37,7 @@ export default function SignIn() {
       } else {
         // Call sign-in function with email and password
         await auth().signInWithEmailAndPassword(email, password);
-        
-    
-
-    
-    
-    
+       
       }
     } catch (e: any) {
       const err = e as FirebaseError;

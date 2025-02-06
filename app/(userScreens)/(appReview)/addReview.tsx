@@ -13,7 +13,6 @@ import { Checkbox } from "react-native-paper";
 
 const goBack = ()=>{
     router.replace('/viewAppReviews')
-
 }
  
  export default function addReview() {
