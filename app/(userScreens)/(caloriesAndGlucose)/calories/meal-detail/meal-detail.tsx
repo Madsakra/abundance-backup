@@ -56,7 +56,6 @@ export default function MealDetail() {
   ];
 
   async function uploadCalories() {
-    if (!currentUser) return;
     setLoading(true);
 
     const data: CaloriesTracking = {
@@ -71,7 +70,7 @@ export default function MealDetail() {
       },
       timestamp: new Date(Date.now()),
       type: 'input',
-      userID: currentUser.uid,
+      userID,
     };
 
     try {
