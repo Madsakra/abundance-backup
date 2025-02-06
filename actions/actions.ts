@@ -8,6 +8,10 @@ export async function fetchCaloriesConsumed(
   userId: string,
   setCaloriesConsumedToday: (data: CaloriesTracking[]) => void
 ): Promise<() => void> {
+  if (userId === '') {
+    return () => {};
+  }
+
   const startOfDay = new Date(timestamp.setHours(0, 0, 0, 0)); // 00:00:00
   const endOfDay = new Date(timestamp.setHours(23, 59, 59, 999)); // 23:59:59
 
@@ -38,6 +42,9 @@ export async function fetchCaloriesConsumedLatest(
   userId: string,
   setCaloriesComsumedLatest: (data: CaloriesTracking | null) => void
 ): Promise<() => void> {
+  if (userId === '') {
+    return () => {};
+  }
   return firestore()
     .collection(`accounts/${userId}/calories`)
     .where('type', '==', 'input')
@@ -63,6 +70,9 @@ export async function fetchCaloriesOutput(
   userId: string,
   setCaloriesOutputToday: (data: CaloriesOutputTracking[]) => void
 ): Promise<() => void> {
+  if (userId === '') {
+    return () => {};
+  }
   const startOfDay = new Date(timestamp.setHours(0, 0, 0, 0)); // 00:00:00
   const endOfDay = new Date(timestamp.setHours(23, 59, 59, 999)); // 23:59:59
 
@@ -93,6 +103,9 @@ export async function fetchCaloriesConsumedOverall(
   userId: string,
   setCaloriesConsumed: (data: CaloriesTracking[]) => void
 ): Promise<() => void> {
+  if (userId === '') {
+    return () => {};
+  }
   try {
     return firestore()
       .collection(`accounts/${userId}/calories`)
@@ -121,6 +134,9 @@ export async function fetchAllGlucoseReadingForToday(
   userId: string,
   setTotalGlucoseToday: (data: GlucoseReading[]) => void
 ): Promise<() => void> {
+  if (userId === '') {
+    return () => {};
+  }
   const startOfDay = new Date(timestamp.setHours(0, 0, 0, 0)); // 00:00:00
   const endOfDay = new Date(timestamp.setHours(23, 59, 59, 999)); // 23:59:59
 
@@ -155,6 +171,9 @@ export async function fetchGlucoseReadingsOverall(
   userId: string,
   setGlucoseOverall: (data: GlucoseReading[]) => void
 ): Promise<() => void> {
+  if (userId === '') {
+    return () => {};
+  }
   try {
     return firestore()
       .collection(`accounts/${userId}/glucose-logs`)
@@ -177,9 +196,9 @@ export async function fetchGlucoseReadingsOverall(
   }
 }
 
-export async function fetchArticlesID(setArticles: (articles: any) => void): Promise<() => void> {
+export async function fetchArticles(setArticles: (articles: any[]) => void): Promise<() => void> {
   return firestore()
-    .collection('articles')
+    .collectionGroup('written_articles')
     .onSnapshot(
       (snapshot) => {
         if (!snapshot.empty) {
@@ -187,14 +206,38 @@ export async function fetchArticlesID(setArticles: (articles: any) => void): Pro
             id: doc.id,
             ...doc.data(),
           }));
-          console.log('Articles:', articles);
           setArticles(articles);
         } else {
           setArticles([]);
         }
       },
       (error) => {
-        console.error('Error fetching latest articles:', error);
+        console.error('Error fetching articles:', error);
+      }
+    );
+}
+
+export async function fetchArticleById(
+  articleId: string,
+  setArticle: (article: any | null) => void
+): Promise<() => void> {
+  return firestore()
+    .collectionGroup('written_articles')
+    .onSnapshot(
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const articles = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          const article = articles.filter((article) => article.id === articleId);
+          setArticle(article[0]);
+        } else {
+          setArticle(null);
+        }
+      },
+      (error) => {
+        console.error('Error fetching articles:', error);
       }
     );
 }

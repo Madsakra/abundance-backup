@@ -23,7 +23,12 @@ export default function Goals() {
   const [caloriesOutputToday, setCaloriesOutputToday] = useState<CaloriesOutputTracking[]>([]);
   const [totalGlucoseToday, setTotalGlucoseToday] = useState<GlucoseReading[]>([]);
 
-  const totalGlucose = totalGlucoseToday.reduce((acc, curr) => acc + curr.reading, 0);
+  const totalGlucose = totalGlucoseToday.reduce((acc, curr) => {
+    if (curr.unit === 'mg/dL') {
+      return acc + curr.reading / 18.0182;
+    }
+    return acc + curr.reading;
+  }, 0);
 
   const totalCalories =
     caloriesConsumedToday.reduce((acc, curr) => acc + curr.amount, 0) -

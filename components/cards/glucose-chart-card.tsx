@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 
-import { fetchAllGlucoseReadingForToday } from '~/actions/actions';
+import { fetchAllGlucoseReadingForToday, fetchGlucoseReadingsOverall } from '~/actions/actions';
 import { GlucoseReading } from '~/types/common/glucose';
 
 type GlucoseCardProps = {
@@ -63,11 +63,7 @@ const GlucoseGraphCard = ({ currentDate, setCurrentDate, showDate = true }: Gluc
         userId,
         setGlucoseToday
       );
-      unsubscribeGlucoseOverall = await fetchAllGlucoseReadingForToday(
-        currentDate,
-        userId,
-        setGlucoseOverall
-      );
+      unsubscribeGlucoseOverall = await fetchGlucoseReadingsOverall(userId, setGlucoseOverall);
     })();
 
     return () => {
