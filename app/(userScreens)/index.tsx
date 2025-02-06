@@ -6,12 +6,14 @@ import { ScrollView, Text, View } from 'react-native';
 
 import {
   fetchAllGlucoseReadingForToday,
+  fetchArticles,
   fetchCaloriesConsumed,
   fetchCaloriesConsumedLatest,
   fetchCaloriesOutput,
 } from '~/actions/actions';
 import FunctionTiedButton from '~/components/FunctionTiedButton';
 import CaloriesConsumedCard from '~/components/calories-chart-card/calories-consumed-card';
+import ArticleCard from '~/components/cards/article-card';
 import GlucoseGraphCard from '~/components/cards/glucose-chart-card';
 import ProgressCard from '~/components/cards/progress-card';
 import { useUserProfile } from '~/ctx';
@@ -35,9 +37,17 @@ export default function Index() {
   );
 
   const [totalGlucoseToday, setTotalGlucoseToday] = useState<GlucoseReading[]>([]);
+  const [articles, setArticles] = useState<any[]>([]);
+
+  const router = useRouter();
 
   const totalCaloriesConsumed = caloriesConsumedToday.reduce((acc, item) => acc + item.amount, 0);
-  const totalGlucose = totalGlucoseToday.reduce((acc, curr) => acc + curr.reading, 0);
+  const totalGlucose = totalGlucoseToday.reduce((acc, curr) => {
+    if (curr.unit === 'mg/dL') {
+      return acc + curr.reading / 18.0182;
+    }
+    return acc + curr.reading;
+  }, 0);
 
   const totalCalories =
     caloriesConsumedToday.reduce((acc, curr) => acc + curr.amount, 0) -
@@ -48,6 +58,7 @@ export default function Index() {
     let unsubscribeLatestConsumed: () => void;
     let unsubscribeCaloriesOutput: () => void;
     let unsubscribeGlucose: () => void;
+    let unsubscribeArticles: () => void;
 
     (async () => {
       unsubscribeConsumed = await fetchCaloriesConsumed(
@@ -69,6 +80,7 @@ export default function Index() {
         userId,
         setTotalGlucoseToday
       );
+      unsubscribeArticles = await fetchArticles(setArticles);
     })();
 
     return () => {
@@ -76,6 +88,7 @@ export default function Index() {
       if (unsubscribeLatestConsumed) unsubscribeLatestConsumed();
       if (unsubscribeCaloriesOutput) unsubscribeCaloriesOutput();
       if (unsubscribeGlucose) unsubscribeGlucose();
+      if (unsubscribeArticles) unsubscribeArticles();
     };
   }, [currentDate, userId]);
 
@@ -289,6 +302,28 @@ export default function Index() {
             }}>
             Feel Free To Read Articles from Nutritionists and improve your health accordingly.
           </Text>
+          <View
+            style={{
+              marginTop: 20,
+              display: 'flex',
+              flexDirection: 'column',
+              flexWrap: 'wrap',
+              gap: 10,
+            }}>
+            {articles.map((article, index) => (
+              <ArticleCard
+                key={index}
+                title={article.title}
+                imageUrl={article.image}
+                onPress={() => {
+                  router.push({
+                    pathname: '/article-details',
+                    params: { id: article.id },
+                  });
+                }}
+              />
+            ))}
+          </View>
         </View>
       </View>
     </ScrollView>

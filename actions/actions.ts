@@ -196,9 +196,9 @@ export async function fetchGlucoseReadingsOverall(
   }
 }
 
-export async function fetchArticlesID(setArticles: (articles: any) => void): Promise<() => void> {
+export async function fetchArticles(setArticles: (articles: any[]) => void): Promise<() => void> {
   return firestore()
-    .collection('articles')
+    .collectionGroup('written_articles')
     .onSnapshot(
       (snapshot) => {
         if (!snapshot.empty) {
@@ -206,14 +206,38 @@ export async function fetchArticlesID(setArticles: (articles: any) => void): Pro
             id: doc.id,
             ...doc.data(),
           }));
-          console.log('Articles:', articles);
           setArticles(articles);
         } else {
           setArticles([]);
         }
       },
       (error) => {
-        console.error('Error fetching latest articles:', error);
+        console.error('Error fetching articles:', error);
+      }
+    );
+}
+
+export async function fetchArticleById(
+  articleId: string,
+  setArticle: (article: any | null) => void
+): Promise<() => void> {
+  return firestore()
+    .collectionGroup('written_articles')
+    .onSnapshot(
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const articles = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          const article = articles.filter((article) => article.id === articleId);
+          setArticle(article[0]);
+        } else {
+          setArticle(null);
+        }
+      },
+      (error) => {
+        console.error('Error fetching articles:', error);
       }
     );
 }

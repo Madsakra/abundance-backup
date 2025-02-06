@@ -17,7 +17,6 @@ import Toast from '~/components/notifications/toast';
 import { CaloriesTracking } from '~/types/common/calories';
 import { EdamamItem } from '~/types/common/edaman';
 import {
-  currentUser,
   db,
   getCaloriesPerServing,
   getNutrient,
