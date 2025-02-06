@@ -53,12 +53,12 @@ export default function Index() {
     caloriesConsumedToday.reduce((acc, curr) => acc + curr.amount, 0) -
     caloriesOutputToday.reduce((acc, curr) => acc + curr.amount, 0);
 
-  // useEffect(() => {
-  //   let unsubscribeConsumed: () => void;
-  //   let unsubscribeLatestConsumed: () => void;
-  //   let unsubscribeCaloriesOutput: () => void;
-  //   let unsubscribeGlucose: () => void;
-  //   let unsubscribeArticles: () => void;
+  useEffect(() => {
+    let unsubscribeConsumed: () => void;
+    let unsubscribeLatestConsumed: () => void;
+    let unsubscribeCaloriesOutput: () => void;
+    let unsubscribeGlucose: () => void;
+    let unsubscribeArticles: () => void;
 
     (async () => {
       unsubscribeConsumed = await fetchCaloriesConsumed(
@@ -83,14 +83,14 @@ export default function Index() {
       unsubscribeArticles = await fetchArticles(setArticles);
     })();
 
-  //   return () => {
-  //     if (unsubscribeConsumed) unsubscribeConsumed();
-  //     if (unsubscribeLatestConsumed) unsubscribeLatestConsumed();
-  //     if (unsubscribeCaloriesOutput) unsubscribeCaloriesOutput();
-  //     if (unsubscribeGlucose) unsubscribeGlucose();
-  //     if (unsubscribeArticles) unsubscribeArticles();
-  //   };
-  // }, [currentDate, userId]);
+    return () => {
+      if (unsubscribeConsumed) unsubscribeConsumed();
+      if (unsubscribeLatestConsumed) unsubscribeLatestConsumed();
+      if (unsubscribeCaloriesOutput) unsubscribeCaloriesOutput();
+      if (unsubscribeGlucose) unsubscribeGlucose();
+      if (unsubscribeArticles) unsubscribeArticles();
+    };
+  }, [currentDate, userId]);
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: 'white' }}>
