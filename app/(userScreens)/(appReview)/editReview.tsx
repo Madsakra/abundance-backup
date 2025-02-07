@@ -3,11 +3,12 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Pressable 
 import Stars from "~/components/Stars";
 import FunctionTiedButton from "~/components/FunctionTiedButton";
 import { router } from "expo-router";
-import CustomModal from "~/components/CustomModal";
+
 import { Review } from "~/types/common/review";
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import { Checkbox } from "react-native-paper";
+import { useUserAccount, useUserProfile } from "~/ctx";
 
 
 
@@ -22,6 +23,8 @@ const goBack = ()=>{
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
   const user = auth().currentUser;
+  const {account} = useUserAccount();
+  const {profile} = useUserProfile();
 
   const fetchData = async()=>{
     const querySnapshot = await firestore().collection('app_reviews').get();
@@ -33,7 +36,7 @@ const goBack = ()=>{
 
     const userReviewSnap = await firestore().collection('user-Reviews-App').doc(user?.uid).get();
     if (userReviewSnap.exists) {
-      const reviewData = userReviewSnap.data() as Review;
+      const reviewData = userReviewSnap.data()?.review as Review;
 
       // Find the review in `allReviews` that matches the fetched review
       const matchedReview = temp.find((r) => r.name === reviewData.name);
@@ -57,9 +60,16 @@ const goBack = ()=>{
       try{
         // sent data to firebase under collection user reviews
         await firestore().collection('user-Reviews-App').doc(user.uid).set({
-          name: selectedReview.name,
-          score: selectedReview.score,
-          reasons: selectedReasons,
+          review:{
+            name: selectedReview.name,
+            score: selectedReview.score,
+            reasons: selectedReasons,
+          },
+          user:{
+            name:account?.name,
+            email:user.email,
+            avatar:profile?.image
+          }
         })
         alert("Reviews Sent")
       }

@@ -11,7 +11,6 @@ import { CustomAlert } from "~/components/alert-dialog/custom-alert-dialog";
 
 
 
-
 export default function viewAppReviews() {
 
 
@@ -22,7 +21,7 @@ export default function viewAppReviews() {
   const user = auth().currentUser;
   const fetchData = async()=>{
     const querySnapshot = await firestore().collection('user-Reviews-App').doc(user?.uid).get();
-    const reviewData = querySnapshot.data() as Review;
+    const reviewData = querySnapshot.data()?.review as Review;
     setSelectedReview({
       id:querySnapshot.id,
       name:reviewData.name,

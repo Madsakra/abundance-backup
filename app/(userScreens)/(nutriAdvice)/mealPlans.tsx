@@ -43,13 +43,13 @@ export default function MealPlans() {
                     <View style={{flexDirection:"row",alignItems:"center",gap:20}}>
                         <Image source={require("assets/routeImages/cooked_food.jpg")} style={{width:70,height:70}}/>
                         <View>
-                            <Text style={{fontSize:20}}>{item.label}</Text>
+                            <Text style={{fontSize:16,maxWidth:180,marginVertical:10,fontWeight:"bold"}}>{item.label}</Text>
                             <Text style={[styles.pill,{backgroundColor:"#C68F5E"}]}>Calories: {item.calories.quantity} {item.calories.unit}</Text>
                         </View>
                         
                     </View>
                     
-                    <View style={{flexDirection:"row",justifyContent:"space-evenly",marginTop:10,gap:20,alignSelf:"center",flexWrap:"wrap",marginBottom:20}}>
+                    <View style={{marginTop:10,gap:20,marginBottom:20}}>
                     <Text style={[styles.pill,{backgroundColor:"#FBA518"}]}>Fats: {item.fats.quantity} {item.fats.unit}</Text>
                     <Text style={[styles.pill,{backgroundColor:"#A89C29"}]}>Carbs: {item.carbs.quantity} {item.carbs.unit}</Text>
                     <Text style={[styles.pill,{backgroundColor:"#E195AB"}]}>Protein: {item.protein.quantity} {item.protein.unit}</Text>                    

@@ -46,6 +46,16 @@ export default function ArticleDetails() {
           <Text style={styles.title}>{article.title}</Text>
         </View>
 
+    
+        <View style={[styles.section,{flexDirection:"row",alignItems:"center",gap:20}]}>
+          <Image source={{uri:article?.writtenBy?.avatar}} style={styles.avatar}/>
+          <View>
+          <Text style={{fontWeight:"bold"}}>{article.writtenBy.name}</Text>
+          <Text>{article?.writtenBy?.email}</Text>
+          </View>
+
+        </View>
+
         {/* Content Section */}
         <View style={styles.section}>
           <Text style={styles.content}>{article.description}</Text>
@@ -96,4 +106,9 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   errorText: { fontSize: 18, color: 'red', textAlign: 'center', marginTop: 20 },
+  avatar:{
+  width:40,
+  height:40,
+  borderRadius:50
+  }
 });

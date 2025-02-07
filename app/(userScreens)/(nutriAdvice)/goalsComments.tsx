@@ -77,7 +77,7 @@ export default function goalsComments() {
 
 
             <Pressable style={reviewd?[styles.actionButton,{backgroundColor:"#999999"}]:styles.actionButton} onPress={seeNext} disabled={reviewd}>
-                <Text style={styles.actionText}>Goals Feedback</Text>
+                <Text style={styles.actionText}>Review Nutritionist</Text>
             </Pressable>
         </View>
 

@@ -8,6 +8,7 @@ import {  StatusFeedbackDisplay } from "~/types/common/nutritionists";
 import FunctionTiedButton from "~/components/FunctionTiedButton";
 import Stars from "~/components/Stars";
 import { Checkbox } from "react-native-paper";
+import { useUserAccount, useUserProfile } from "~/ctx";
 
 
 export default function ReviewNutri() {
@@ -20,6 +21,9 @@ export default function ReviewNutri() {
     const [showModal,setShowModal] = useState(false);
     const [selectedReview, setSelectedReview] = useState<Review | null>(null);
     const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
+    const {account} = useUserAccount();
+    const {profile} = useUserProfile();
+
     const user = auth().currentUser;
 
     const fetchData = async()=>{
@@ -48,7 +52,9 @@ export default function ReviewNutri() {
               name: selectedReview.name,
               score: selectedReview.score,
               reasons: selectedReasons,
+              nutritionist:parsedDisplayInfo
             });
+
 
 
             // store on nutritionist account so can display
@@ -56,6 +62,11 @@ export default function ReviewNutri() {
                 name: selectedReview.name,
                 score: selectedReview.score,
                 reasons: selectedReasons,
+                userInfo:{
+                  name:account?.name,
+                  email:account?.email,
+                  avatar:profile?.image
+                }
               });
             alert("Reviews Sent")
           }
