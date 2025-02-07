@@ -1,3 +1,5 @@
+import { FirebaseFirestoreTypes, Timestamp } from "@react-native-firebase/firestore";
+
 export interface nutritionistProfile {
   avatar: string;
   dob: string;
@@ -44,4 +46,18 @@ export interface AdviceInformation {
     protein:{quantity:number,unit:string},
     label:string,
   }[],
+  timestamp:Timestamp
+}
+
+
+export interface AdviceHistory {
+  id: string;
+  email: string;
+  name: string;
+  avatar: string;
+  timestamp: FirebaseFirestoreTypes.Timestamp | null;
+  title: string;
+  content: string;
+  goalAdvice: string;
+  nutritionistID:string,
 }

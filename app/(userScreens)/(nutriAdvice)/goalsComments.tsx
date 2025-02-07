@@ -37,14 +37,21 @@ export default function goalsComments() {
 
 
     const seeNext = ()=>{
-        router.navigate({
-            pathname: '/reviewNutri',
-            params: {
-                displayInfo: displayInfo,
-                advice:advice,
-            }
+        if (reviewd)
+        {
+            router.navigate('/allFeedback')
         }
-        )
+        else{
+            router.navigate({
+                pathname: '/reviewNutri',
+                params: {
+                    displayInfo: displayInfo,
+                    advice:advice,
+                }
+            }
+            )
+        }
+
      }
 
      useEffect(()=>{
@@ -76,8 +83,8 @@ export default function goalsComments() {
             </View>
 
 
-            <Pressable style={reviewd?[styles.actionButton,{backgroundColor:"#999999"}]:styles.actionButton} onPress={seeNext} disabled={reviewd}>
-                <Text style={styles.actionText}>Review Nutritionist</Text>
+            <Pressable style={styles.actionButton} onPress={seeNext} >
+                <Text style={styles.actionText}>{reviewd?"View All Feedback":"Review Nutritionist"}</Text>
             </Pressable>
         </View>
 

@@ -1,7 +1,7 @@
 import { Entypo } from '@expo/vector-icons';
-import { Link, useLocalSearchParams } from 'expo-router';
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Image, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Image, ActivityIndicator, Pressable } from 'react-native';
 
 import { fetchArticleById } from '~/actions/actions';
 
@@ -46,15 +46,16 @@ export default function ArticleDetails() {
           <Text style={styles.title}>{article.title}</Text>
         </View>
 
-    
-        <View style={[styles.section,{flexDirection:"row",alignItems:"center",gap:20}]}>
+          {/* Header Section*/}
+          
+        <Pressable style={[styles.section,{flexDirection:"row",alignItems:"center",gap:20}]} onPress={()=>router.navigate(`/(requestAdvice)/${article?.writtenBy?.uid}`)}>
           <Image source={{uri:article?.writtenBy?.avatar}} style={styles.avatar}/>
           <View>
-          <Text style={{fontWeight:"bold"}}>{article.writtenBy.name}</Text>
+          <Text style={{fontWeight:"bold"}}>{article.writtenBy?.name}</Text>
           <Text>{article?.writtenBy?.email}</Text>
           </View>
 
-        </View>
+        </Pressable>
 
         {/* Content Section */}
         <View style={styles.section}>

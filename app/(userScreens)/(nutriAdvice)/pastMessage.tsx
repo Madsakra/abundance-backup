@@ -1,66 +1,46 @@
+
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react'
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import firestore, { collection, doc, getDoc, getDocs, limit, onSnapshot, orderBy, query } from '@react-native-firebase/firestore';
-import { AdviceInformation, StatusFeedbackDisplay } from '~/types/common/nutritionists';
 import auth from '@react-native-firebase/auth';
-import LoadingAnimation from '~/components/LoadingAnimation';
-import { Entypo } from '@expo/vector-icons';
+import { AdviceInformation, StatusFeedbackDisplay } from '~/types/common/nutritionists';
+import { useEffect, useState } from 'react';
+import { collection, doc } from '@react-native-firebase/firestore';
 import { db } from '~/utils';
+import { Entypo } from '@expo/vector-icons';
+import LoadingAnimation from '~/components/LoadingAnimation';
 
-export default function AdviceMessage() {
+export default function PastMessage() {
 
-const { id } = useLocalSearchParams();
-const documentId = Array.isArray(id) ? id[0] : id;
-const currentUID = auth().currentUser?.uid;
+    const { id,nutriID } = useLocalSearchParams();
+    const documentId = Array.isArray(id) ? id[0] : id;
+    const nutriUID = Array.isArray(nutriID) ? nutriID[0]:nutriID; 
+    const currentUID = auth().currentUser?.uid;
 
-const [displayInfo,setDisplayInfo] = useState<StatusFeedbackDisplay|null>(null);
-const [advice,setAdvice] = useState<AdviceInformation|null>(null);
+    const [displayInfo,setDisplayInfo] = useState<StatusFeedbackDisplay|null>(null);
+    const [advice,setAdvice] = useState<AdviceInformation|null>(null);
+
+    const fetchData = async () => {
+        console.log(documentId);
+        console.log(nutriUID);
 
 
-const fetchData = () => {
     try {
       // Reference to the "tailored_advice" document
-      const displayInfoRef = doc(db, "accounts", currentUID!, "tailored_advice", documentId);
+      const displayInfoRef = doc(db, "accounts", currentUID!, "tailored_advice", nutriUID);
   
       // Reference to the "advice" subcollection
-      const adviceCollectionRef = collection(db, "accounts", currentUID!, "tailored_advice", documentId, "advice");
+      const adviceCollectionRef = doc(db, "accounts", currentUID!, "tailored_advice", nutriUID,"advice",documentId);
   
-      // Real-time listener for "tailored_advice" document
-      const unsubscribeDisplay = onSnapshot(displayInfoRef, (docSnapshot) => {
-        if (docSnapshot.exists) {
-          setDisplayInfo(docSnapshot.data() as StatusFeedbackDisplay);
-        } else {
-          console.log("No display info found");
-        }
-      });
-  
-      // Real-time listener for the latest advice document
-      const latestAdviceQuery = query(adviceCollectionRef, orderBy("timestamp", "desc"), limit(1));
-  
-      const unsubscribeAdvice = onSnapshot(latestAdviceQuery, (querySnapshot) => {
-        if (!querySnapshot.empty) {
-          const latestAdviceDoc = querySnapshot.docs[0].data() as AdviceInformation;
-          setAdvice(latestAdviceDoc);
-        } else {
-          console.log("No advice found");
-        }
-      });
-  
-      // Cleanup function to unsubscribe when the component unmounts
-      return () => {
-        unsubscribeDisplay();
-        unsubscribeAdvice();
-      };
-  
+
+      const displayInfo = await displayInfoRef.get();
+      const adviceInfo = await adviceCollectionRef.get();
+      setDisplayInfo(displayInfo.data() as StatusFeedbackDisplay);
+      setAdvice(adviceInfo.data() as AdviceInformation);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
-  
-  useEffect(() => {
-    return fetchData();
-  }, []);
+
 
  const seeNext = ()=>{
     router.navigate({
@@ -74,12 +54,21 @@ const fetchData = () => {
  }
 
 
+  
+  useEffect(()=>{
+    fetchData();
+  },[])
+
+
+
+
+
   return (
     <ScrollView>
         {(advice && displayInfo)?
         <View style={styles.innerContainer}>
 
-            <Pressable onPress={()=>router.navigate('/allFeedback')} style={{padding:20}}>
+            <Pressable onPress={()=>router.navigate('/feedbackHistory')} style={{padding:20}}>
             <Entypo name="chevron-thin-left" size={20} color="black" />
             </Pressable>
             

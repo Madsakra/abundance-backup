@@ -5,6 +5,9 @@ import firestore, { onSnapshot } from '@react-native-firebase/firestore';
 import {  StatusFeedbackDisplay } from '~/types/common/nutritionists';
 import { FlashList } from '@shopify/flash-list';
 import AdviceStatus from '~/components/cards/advice-status';
+import { FontAwesome5 } from '@expo/vector-icons';
+import { Pressable } from 'react-native-gesture-handler';
+import { router } from 'expo-router';
 
 
 
@@ -40,8 +43,11 @@ export default function AllFeedback() {
 
   return (
     <ScrollView>
-        <View style={{flex:1,padding:25}}>
-          <Text style={styles.headerText}>View Your Requests Status</Text>
+        <View style={{flex:1,padding:25,flexDirection:"row"}}>
+          <Text style={styles.headerText}>View Latest Request Status</Text>
+          <Pressable onPress={()=>router.navigate('/feedbackHistory')}>
+          <FontAwesome5 name="history" size={24} color="#00ACAC" />
+          </Pressable>
         </View>
         <FlashList
         data={advices}
