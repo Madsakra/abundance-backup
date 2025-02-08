@@ -25,7 +25,7 @@ export default function GlucoseLogging() {
   if (typeof glucoseLevel !== 'string') {
     throw new Error('Invalid glucose level');
   }
-  
+
   const glucoseLevelReading = glucoseLevel.split(' ')[0];
   const glucoseLevelUnit = glucoseLevel.split(' ')[1];
 
@@ -90,45 +90,43 @@ export default function GlucoseLogging() {
         }}>
         Glucose Logging
       </Text>
-          {/*BACK BUTTON*/}
-        <View style={{padding:10,paddingBottom:0,flexDirection:"row",alignItems:"center"}}>
-        <Pressable onPress={()=>router.navigate("/(userScreens)/(caloriesAndGlucose)/gateway")}>
-        <Entypo name="chevron-left" size={25} color="white" />
+      {/*BACK BUTTON*/}
+      <View style={{ padding: 10, paddingBottom: 0, flexDirection: 'row', alignItems: 'center' }}>
+        <Pressable onPress={() => router.navigate('/(userScreens)/(caloriesAndGlucose)/gateway')}>
+          <Entypo name="chevron-left" size={25} color="white" />
         </Pressable>
 
         <Pressable
-        onPress={() => {
-          if (membershipTier?.status!=="active") {
-            toastInfo('Upgrade to premium to use this feature.');
-            return;
-          }
-          router.push('/(userScreens)/(caloriesAndGlucose)/glucose/camera/camera-logging');
-        }}
-        style={{
-          padding: 10,
-          backgroundColor: 'white',
-          width: 'auto',
-          borderRadius: 10,
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 10,
-          marginVertical: 20,
-          marginLeft: 'auto',
-        }}>
-        <Ionicons name="camera" size={25} color={colorPink} />
-        <Text
+          onPress={() => {
+            if (membershipTier?.status !== 'active') {
+              toastInfo('Upgrade to premium to use this feature.');
+              return;
+            }
+            router.push('/(userScreens)/(caloriesAndGlucose)/glucose/camera/camera-logging');
+          }}
           style={{
-            color: colorPink,
-            fontWeight: 'bold',
+            padding: 10,
+            backgroundColor: 'white',
+            width: 'auto',
+            borderRadius: 10,
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            marginVertical: 20,
+            marginLeft: 'auto',
           }}>
-          Camera Logging
-        </Text>
-      </Pressable>
-
-
-        </View>
+          <Ionicons name="camera" size={25} color={colorPink} />
+          <Text
+            style={{
+              color: colorPink,
+              fontWeight: 'bold',
+            }}>
+            Camera Logging
+          </Text>
+        </Pressable>
+      </View>
 
       <View
         style={{

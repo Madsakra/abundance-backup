@@ -142,7 +142,7 @@ export default function EditGoals() {
                   if (item.categoryID === 'glucose') {
                     return item.categoryID === goal.categoryID;
                   }
-                  return item.max === goal.max;
+                  return item.categoryID === goal.categoryID;
                 });
 
                 if (isExist) {

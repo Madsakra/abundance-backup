@@ -87,7 +87,7 @@ export default function MetabolicTask() {
         .then(() => {
           toastSuccess('Uploaded Successfully');
           setTimeout(() => {
-            router.push('/(userScreens)/(caloriesAndGlucose)/gateway');
+            router.push('/(userScreens)/(caloriesAndGlucose)/calories/graph/calories-graph');
           }, 1200);
         });
     } catch (err) {

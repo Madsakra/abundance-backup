@@ -196,6 +196,33 @@ export async function fetchGlucoseReadingsOverall(
   }
 }
 
+export async function fetchGlucoseLatest(
+  userId: string,
+  setGlucoseLatest: (data: GlucoseReading | null) => void
+): Promise<() => void> {
+  if (userId === '') {
+    return () => {};
+  }
+  return firestore()
+    .collection(`accounts/${userId}/glucose-logs`)
+    .orderBy('timestamp', 'desc')
+    .limit(1)
+    .onSnapshot(
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const glucose = snapshot.docs[0].data() as GlucoseReading;
+          console.log('glucose', glucose);
+          setGlucoseLatest(glucose);
+        } else {
+          setGlucoseLatest(null);
+        }
+      },
+      (error) => {
+        console.error('Error fetching real-time calorie input:', error);
+      }
+    );
+}
+
 export async function fetchArticles(setArticles: (articles: any[]) => void): Promise<() => void> {
   return firestore()
     .collectionGroup('written_articles')

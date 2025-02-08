@@ -1,8 +1,7 @@
 import { FontAwesome } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
 import { useEffect, useState } from 'react';
-import { ScrollView, Text, View, Image } from 'react-native';
+import { Image, ScrollView, Text, View } from 'react-native';
 
 import { fetchCaloriesConsumed, fetchCaloriesOutput } from '~/actions/actions';
 import CaloriesConsumedCard from '~/components/calories-chart-card/calories-consumed-card';

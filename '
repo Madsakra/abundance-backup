@@ -241,7 +241,7 @@ export default function Index() {
               fontSize: 16,
               fontWeight: 'bold',
             }}>
-            {selectedTab === 'calories' ? 'Total calories consumed' : 'Total glucose reading'}
+            Total calories consumed Today
           </Text>
           <View
             style={{
@@ -251,28 +251,15 @@ export default function Index() {
               alignItems: 'center',
             }}>
             <MaterialIcons name="local-fire-department" size={24} color={colorBrown} />
-            {selectedTab === 'calories' && (
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: 'bold',
-                  marginLeft: 10,
-                  color: colorBrown,
-                }}>
-                {Math.round(totalCaloriesConsumed * 100) / 100} kcal
-              </Text>
-            )}
-            {selectedTab === 'glucose' && (
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: 'bold',
-                  marginLeft: 10,
-                  color: colorBrown,
-                }}>
-                {Math.round(totalGlucose * 100) / 100} mmol/L
-              </Text>
-            )}
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: 'bold',
+                marginLeft: 10,
+                color: colorBrown,
+              }}>
+              {Math.round(totalCaloriesConsumed * 100) / 100} kcal
+            </Text>
           </View>
         </View>
         <Text

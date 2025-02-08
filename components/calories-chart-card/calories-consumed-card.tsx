@@ -1,5 +1,6 @@
 import { FontAwesome } from '@expo/vector-icons'; // For calendar icon
 import auth from '@react-native-firebase/auth';
+import { Timestamp } from '@react-native-firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
@@ -40,22 +41,34 @@ const CaloriesConsumedCard = ({
     const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
     const monthlyCalories: { [key: string]: number } = {};
 
-    // Initialize monthly data
     monthLabels.forEach((month) => (monthlyCalories[month] = 0));
 
     caloriesConsumed.forEach((entry) => {
-      const date = entry.timestamp;
-      const monthName = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
+      let date: Date;
 
-      if (monthlyCalories[monthName] !== undefined) {
-        monthlyCalories[monthName] += entry.amount || 0; // Sum calorie values
+      if (entry.timestamp instanceof Timestamp) {
+        date = entry.timestamp.toDate();
+      } else if (typeof entry.timestamp === 'object' && 'seconds' in entry.timestamp) {
+        date = new Date(entry.timestamp.seconds * 1000);
+      } else {
+        date = new Date(entry.timestamp);
+      }
+
+      if (!isNaN(date.getTime())) {
+        const monthName = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
+
+        if (monthlyCalories[monthName] !== undefined) {
+          monthlyCalories[monthName] += entry.amount || 0;
+        }
+      } else {
+        console.warn('Invalid date format:', entry.timestamp);
       }
     });
 
     return monthLabels.map((month) => monthlyCalories[month]);
   };
 
-  const chartData = getMonthlyCalories(caloriesConsumed); // Process fetched data
+  const chartData = getMonthlyCalories(caloriesConsumed);
 
   useEffect(() => {
     let unsubscribeConsumedToday: () => void;

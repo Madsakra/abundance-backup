@@ -1,5 +1,6 @@
 import { FontAwesome } from '@expo/vector-icons'; // For calendar icon
 import auth from '@react-native-firebase/auth';
+import { Timestamp } from '@react-native-firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
@@ -32,19 +33,34 @@ const GlucoseGraphCard = ({ currentDate, setCurrentDate, showDate = true }: Gluc
     const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
     const monthlyGlucose: { [key: string]: number } = {};
 
-    // Initialize monthly data
     monthLabels.forEach((month) => (monthlyGlucose[month] = 0));
 
     glucose.forEach((entry) => {
-      const date = entry.timestamp;
-      const monthName = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
+      let date: Date;
 
-      if (monthlyGlucose[monthName] !== undefined) {
-        // Convert reading unit to mmol/L
-        if (entry.unit === 'mg/dL') {
-          entry.reading = entry.reading / 18.0182;
+      if (entry.timestamp instanceof Timestamp) {
+        date = entry.timestamp.toDate();
+      } else if (typeof entry.timestamp === 'object' && 'seconds' in entry.timestamp) {
+        date = new Date(entry.timestamp.seconds * 1000);
+      } else {
+        date = new Date(entry.timestamp);
+      }
+
+      if (!isNaN(date.getTime())) {
+        const monthName = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
+
+        if (monthlyGlucose[monthName] !== undefined) {
+          let glucoseValue = entry.reading || 0;
+
+          // Convert reading unit to mmol/L if needed
+          if (entry.unit === 'mg/dL') {
+            glucoseValue = glucoseValue / 18.0182;
+          }
+
+          monthlyGlucose[monthName] += glucoseValue;
         }
-        monthlyGlucose[monthName] += entry.reading || 0; // Sum calorie values
+      } else {
+        console.warn('Invalid date format:', entry.timestamp);
       }
     });
 
