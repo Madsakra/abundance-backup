@@ -1,25 +1,25 @@
-import { ActivityIndicator, Dimensions, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { MembershipTier } from "~/types/common/membership";
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-import { useState } from "react";
-import WebView from "react-native-webview";
+import { toastSuccess } from "~/utils";
+
+
 
 type MembershipBoxProps = {
     tier:MembershipTier;
+    setCustomerURL:(customerURL:string)=>void;
+    setLoading:(load:boolean)=>void,
+    showWebView:boolean
 }
 
 
 
+export default function MembershipBox({tier,setCustomerURL,setLoading,showWebView}:MembershipBoxProps) {
 
 
 
 
-export default function MembershipBox({tier}:MembershipBoxProps) {
-
-    const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
-    const [showWebView, setShowWebView] = useState(false);
-    const [loading,setLoading] = useState(false);
     const userNowUID = auth().currentUser?.uid;
 
       
@@ -47,9 +47,9 @@ export default function MembershipBox({tier}:MembershipBoxProps) {
             const data = snap.data();
     
             if (data?.url) {
-              setCheckoutUrl(data.url);
+              setCustomerURL(data.url)
               setLoading(false);
-              setShowWebView(true); // Show WebView when URL is ready
+      
             }
           });
     
@@ -61,8 +61,8 @@ export default function MembershipBox({tier}:MembershipBoxProps) {
     
           const unsubscribeSubscription = subscriptionsRef.onSnapshot(async (snapshot) => {
             if (!snapshot.empty) {
-              console.log("Subscription detected! Closing WebView...");
-              setShowWebView(false); // Hide WebView when subscription is confirmed
+              toastSuccess("Subscribed! Going Back....");
+              setCustomerURL("https://abundance-3f9ab.web.app/"); // Hide WebView when subscription is confirmed
               unsubscribeSubscription(); // Stop listening
               unsubscribeCheckout(); // Stop listening to checkout session
             }
@@ -78,44 +78,29 @@ export default function MembershipBox({tier}:MembershipBoxProps) {
         }
       };
 
-      
+
 
 
   return (
-          <View style={styles.container} key={tier.id}>
-                <View>
-                <Text style={styles.tierDescription}>{tier.description}</Text>
-                <Text style={styles.price}>${tier.unit_amount/100} / {tier.interval}</Text>
-                </View>
-                <Pressable style={styles.subscribeButton} onPress={startCheckout}>
-                    <Text style={styles.buttonText}>Subscribe</Text>
-                </Pressable>
- 
-                    {/* WebView Modal */}
-                    {showWebView && checkoutUrl && (
-                      <Modal visible={showWebView} animationType="slide">
-                        <WebView
-                          source={{ uri: checkoutUrl }}
-                          onNavigationStateChange={(navState) => {
-                            if (navState.url === "https://abundance-3f9ab.web.app/") {
-                              console.log("Payment successful! Closing WebView...");
-                              setShowWebView(false); // Hide WebView when success URL is reached
-                            }
-                          }}
-                        />
-                      </Modal>
-                    )}
+      <>
+        {!showWebView &&
+        
+        <View style={styles.container} key={tier.id}>
+
+        <View>
+        <Text style={styles.tierDescription}>{tier.description}</Text>
+        <Text style={styles.price}>${tier.unit_amount/100} / {tier.interval}</Text>
+        </View>
+        <Pressable style={styles.subscribeButton} onPress={startCheckout}>
+            <Text style={styles.buttonText}>Subscribe</Text>
+        </Pressable>
+        </View>
+        }      
+      </>
 
 
-                  {
-                  loading &&
-                  <Modal>
-                    <View style={{flex:1,alignItems:"center",justifyContent:"center"}}>
-                    <ActivityIndicator size={"large"}/>                  
-                    </View>
-                  </Modal>
-                }
-          </View>
+
+         
   )
 }
 
@@ -153,6 +138,7 @@ const styles = StyleSheet.create({
     price:{
       fontSize:16,
       fontWeight:"medium"
-    }
+    },
+
 
 })

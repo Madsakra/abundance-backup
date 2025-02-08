@@ -11,7 +11,7 @@ import { CustomAlert } from '~/components/alert-dialog/custom-alert-dialog';
 import { useUserProfile } from '~/ctx';
 import { HealthProfileData, SelectedHealthProfile } from '~/types/common/health-condition';
 import { UserProfile } from '~/types/users/profile';
-import { colorViolet } from '~/utils';
+import { colorViolet, toastSuccess } from '~/utils';
 
 export default function EditHealthProfile() {
   const { profile, loading } = useUserProfile();
@@ -126,8 +126,13 @@ export default function EditHealthProfile() {
           .collection('profile')
           .doc('profile_info')
           .update(updateData);
-          alert("Health profile updated successfully")
-        router.replace('/(userScreens)/(settings)/settings');
+        
+          
+          alert("Health profile updated successfully");
+
+          setTimeout(() => {
+            router.replace('/(userScreens)/(settings)/profile/profile');
+          }, 500);
 
       } catch (error) {
         console.error('Error updating document:', error);
@@ -142,6 +147,24 @@ export default function EditHealthProfile() {
   };
 
   const handleConfirm = () => {
+    // Enforce Primary Diet variation selection
+    const primaryDiet = newDietaryRestrictions.find((diet) => diet.name === 'Primary diet');
+  
+    if (!primaryDiet || !primaryDiet.variation) {
+      alert('You must select exactly one variation for Primary Diet.');
+      setIsAlertVisible(false);
+      return; // Prevent submission
+    }
+  
+    // Enforce variation selection for health conditions
+    const incompleteHealthConditions = newHealthConditions.filter((condition) => !condition.variation);
+  
+    if (incompleteHealthConditions.length > 0) {
+      alert('Please select a variation for every health condition you have chosen.');
+      setIsAlertVisible(false);
+      return; // Prevent submission
+    }
+  
     updateHealthProfile({
       profileDiet: newDietaryRestrictions,
       profileHealthCondi: newHealthConditions,
@@ -298,7 +321,7 @@ export default function EditHealthProfile() {
           padding: 20,
         }}>
         <Pressable
-          onPress={() => router.push('/(userScreens)/(settings)/settings')}
+          onPress={() => router.replace('/(userScreens)/(settings)/profile/profile')}
           style={{
             backgroundColor: 'gray',
             paddingVertical: 10,

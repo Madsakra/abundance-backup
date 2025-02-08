@@ -58,13 +58,17 @@ export default function HealthCondition() {
   };
 
   const nextSection = async () => {
-    // SEND DATA TO SQL LITE FIRST
-    await updateLocalProfileFields({
-      profileHealthCondi,
-    });
-    // NAVIGATE TO GOAL SETTING PAGE
+    const incompleteConditions = profileHealthCondi.filter((condition) => !condition.variation);
+
+    if (incompleteConditions.length > 0) {
+      alert('Please select a variation for every selected health condition before proceeding.');
+      return;
+    }
+
+    await updateLocalProfileFields({ profileHealthCondi });
     router.replace('/(profileCreation)/dietInfo');
   };
+
 
   useEffect(() => {
     loadProfileData();

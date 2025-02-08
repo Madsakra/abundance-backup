@@ -5,7 +5,7 @@ import { DisplayedReviews, NutritionistAccount, nutritionistProfile } from '~/ty
 import firestore from '@react-native-firebase/firestore';
 import LoadingAnimation from '~/components/LoadingAnimation';
 import Stars from '~/components/Stars';
-import { FontAwesome } from '@expo/vector-icons';
+import { Entypo, FontAwesome } from '@expo/vector-icons';
 import {  useUserAccount, useUserProfile } from '~/ctx';
 import auth from '@react-native-firebase/auth';
 import { toastError, toastInfo, toastSuccess } from '~/utils';
@@ -97,7 +97,7 @@ export default function NutritionistDetail() {
               const requestSnapshot = await requestDocRef.get();
   
               if (requestSnapshot.exists) {
-                toastError("You have already sent a request to this nutritionist.");
+                alert("You have already sent a request to this nutritionist.");
               } else {
                 // If it doesn't exist, send the request
                 await requestDocRef.set(profile);
@@ -114,8 +114,11 @@ export default function NutritionistDetail() {
                   status:"pending",
                   nutritionistInfo:nutritionistInfo
                 })
-                toastSuccess(`Request for Advice sent to ${nutritionistInfo?.profile.title}`);
-                router.navigate("/(requestAdvice)/viewNutritionists");
+                alert(`Request for Advice sent to ${nutritionistInfo?.profile.title}`);
+
+                setTimeout(()=>{
+                  router.navigate("/(requestAdvice)/viewNutritionists");
+                },200)
               }
             }
           } catch (err) {
@@ -141,7 +144,11 @@ export default function NutritionistDetail() {
 
   return (
     <ScrollView>
-    
+              <View style={{padding:25}}>
+          <Pressable onPress={()=>router.navigate("/(userScreens)/(requestAdvice)/viewNutritionists")}>
+                <Entypo name="chevron-thin-left" size={20} color="black" />
+        </Pressable>
+      </View>
        {loading?
         <LoadingAnimation/>:
 

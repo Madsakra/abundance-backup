@@ -77,13 +77,13 @@ export default function DietInfo() {
   };
 
   const nextSection = async () => {
-    const hasPrimaryDiet = profileDiet.some((diet) => diet.name === 'Primary diet');
+    const hasPrimaryDiet = profileDiet.find((diet) => diet.name === 'Primary diet');
 
-    if (!hasPrimaryDiet) {
-      // Show a warning or alert if no primary diet is selected
-      alert('Please select at least one primary diet.');
-      return; // Prevent submitting
+    if (!hasPrimaryDiet || !hasPrimaryDiet.variation) {
+      alert('You must select exactly one variation for Primary Diet.');
+      return; // Prevent submission
     }
+  
     // SEND DATA TO SQL LITE FIRST
     await updateLocalProfileFields({
       profileDiet,
