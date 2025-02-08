@@ -1,10 +1,11 @@
-import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import auth, { FirebaseAuthTypes, getAuth, onAuthStateChanged, signOut } from '@react-native-firebase/auth';
+import firestore, { collection, doc, getFirestore, onSnapshot } from '@react-native-firebase/firestore';
 import { useRouter } from 'expo-router';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import { UserAccount, UserMembership } from './types/users/account';
 import { UserProfile } from './types/users/profile';
+import { StripeSubscription } from './types/common/membership';
 
 // Define the context value structure
 interface UserProfileContextValue {
@@ -16,8 +17,7 @@ interface UserAccountContextValue {
   account: UserAccount | null;
   setAccount: (account: UserAccount) => void;
   loading: boolean;
-  membership: UserMembership | null;
-  setMembership: (newMemb: UserMembership) => void;
+  membershipTier: StripeSubscription| null;
 }
 
 // Create the context with a default value of null
@@ -29,33 +29,33 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const auth = getAuth();
+  const db = getFirestore();
+
   useEffect(() => {
-    const unsubscribe = auth().onAuthStateChanged((user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user:FirebaseAuthTypes.User|null) => {
       if (!user) {
         setProfile(null);
         setLoading(false);
         return;
       }
 
-      const docRef = firestore()
-        .collection('accounts')
-        .doc(user.uid)
-        .collection('profile')
-        .doc('profile_info');
+      const docRef = doc(db, "accounts", user.uid, "profile", "profile_info");
 
-      // 🔥 Use `.onSnapshot()` to listen for real-time updates
-      const unsubscribeSnapshot = docRef.onSnapshot(
+      // 🔥 Use `onSnapshot()` for real-time updates
+      const unsubscribeSnapshot = onSnapshot(
+        docRef,
         (documentSnapshot) => {
           if (documentSnapshot.exists) {
             setProfile(documentSnapshot.data() as UserProfile);
           } else {
-            alert('Welcome! Please create a profile before using our services.');
-            router.replace('/(profileCreation)/simpleInformation');
+            alert("Welcome! Please create a profile before using our services.");
+            router.replace("/(profileCreation)/simpleInformation");
           }
           setLoading(false);
         },
         (error) => {
-          console.error('Error fetching user profile:', error);
+          console.error("Error fetching user profile:", error);
           setLoading(false);
         }
       );
@@ -63,7 +63,7 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return unsubscribeSnapshot; // Unsubscribe when component unmounts
     });
 
-    return unsubscribe; // Unsubscribe auth listener on unmount
+    return unsubscribeAuth; // Unsubscribe auth listener on unmount
   }, []);
 
   return (
@@ -75,73 +75,75 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
 export const UserAccountProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [account, setAccount] = useState<UserAccount | null>(null);
-  const [membership, setMembership] = useState<UserMembership | null>(null);
+  const [membershipTier,setCurrentMembershipTier] = useState<StripeSubscription|null>(null)
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const auth = getAuth();
+  const db = getFirestore();
+
   useEffect(() => {
-    const authSubscriber = auth().onAuthStateChanged((user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user:FirebaseAuthTypes.User) => {
       if (!user) {
         setAccount(null);
-        setMembership(null);
+        setCurrentMembershipTier(null);
         setLoading(false);
         return;
       }
 
-      const accountRef = firestore().collection('accounts').doc(user.uid);
+      const accountRef = doc(db, "accounts", user.uid);
 
       // 🔥 Listen for real-time account updates
-      const unsubscribeAccount = accountRef.onSnapshot(
+      const unsubscribeAccount = onSnapshot(
+        accountRef,
         async (accountSnapshot) => {
           if (!accountSnapshot.exists) {
-            router.replace('/');
+            router.replace("/");
             return;
           }
 
           const userAccount = accountSnapshot.data() as UserAccount;
 
-          if (userAccount.role !== 'user') {
-            await auth().signOut();
-            alert('Not authorized! Please use the web instead.');
+
+          setAccount(userAccount);
+
+
+          if (userAccount.role !== "user") {
+            await signOut(auth);
+            alert("Not authorized! Please use the web instead.");
             return;
           }
 
           if (!user.emailVerified) {
-            await auth().signOut();
-            alert('Please verify your email before accessing the app.');
+            await signOut(auth);
+            alert("Please verify your email before accessing the app.");
             return;
           }
 
-          setAccount(userAccount);
-
-          // Listen for real-time membership updates
-          const membershipRef = firestore().collection(`users/${user.uid}/membership`);
-          const unsubscribeMembership = membershipRef.onSnapshot((membershipSnapshot) => {
-            if (!membershipSnapshot.empty) {
-              const memberships: UserMembership[] = membershipSnapshot.docs.map((doc) => ({
-                membershipID: doc.id,
-                ...doc.data(),
-              })) as UserMembership[];
-              setMembership(memberships[0]); // Set first membership
-            }
-          });
-
-          return () => unsubscribeMembership(); // Cleanup membership listener
+            // Reference the "subscriptions" collection for the user
+              const subscriptionsRef = firestore().collection("accounts").doc(user.uid).collection("subscriptions");
+                // Listen for real-time updates
+                const unsubscribeMembership = subscriptionsRef.onSnapshot(async (snapshot) => {
+                  if (!snapshot.empty) {
+                    setCurrentMembershipTier(snapshot.docs[0].data() as StripeSubscription)
+                  } 
+                });
+              return () => unsubscribeMembership(); // Cleanup membership listener
+  
         },
         (error) => {
-          console.error('Error fetching user account:', error);
+          console.error("Error fetching user account:", error);
         }
       );
-
       return () => unsubscribeAccount(); // Cleanup account listener
     });
 
-    return () => authSubscriber(); // Cleanup auth listener
+    return () => unsubscribeAuth(); // Cleanup auth listener
   }, []);
 
   return (
     <UserAccountContext.Provider
-      value={{ account, setAccount, loading, membership, setMembership }}>
+      value={{ account, setAccount, loading, membershipTier }}>
       {children}
     </UserAccountContext.Provider>
   );

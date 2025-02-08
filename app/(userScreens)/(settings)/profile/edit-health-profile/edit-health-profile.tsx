@@ -109,18 +109,32 @@ export default function EditHealthProfile() {
   };
 
   const updateHealthProfile = async (updateData: Partial<UserProfile>) => {
-    try {
-      await firestore()
-        .collection('accounts')
-        .doc(user?.uid)
-        .collection('profile')
-        .doc('profile_info')
-        .update(updateData);
 
-      console.log('Document successfully updated!');
-    } catch (error) {
-      console.error('Error updating document:', error);
+    const hasPrimaryDiet = newDietaryRestrictions.some((diet) => diet.name === 'Primary diet');
+
+    if (!hasPrimaryDiet) {
+      // Show a warning or alert if no primary diet is selected
+      alert('Please select at least one primary diet.');
+      return; // Prevent submitting
     }
+
+    else{
+      try {
+        await firestore()
+          .collection('accounts')
+          .doc(user?.uid)
+          .collection('profile')
+          .doc('profile_info')
+          .update(updateData);
+          alert("Health profile updated successfully")
+        router.replace('/(userScreens)/(settings)/settings');
+
+      } catch (error) {
+        console.error('Error updating document:', error);
+      }
+    }
+
+
   };
 
   const handleClose = () => {
@@ -132,7 +146,6 @@ export default function EditHealthProfile() {
       profileDiet: newDietaryRestrictions,
       profileHealthCondi: newHealthConditions,
     });
-    router.push('/(userScreens)/(settings)/settings');
     setIsAlertVisible(false);
   };
 

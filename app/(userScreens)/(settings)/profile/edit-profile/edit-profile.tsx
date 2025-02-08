@@ -1,11 +1,12 @@
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-import storage from '@react-native-firebase/storage';
+import storage, { getDownloadURL, getStorage, ref, uploadBytes, uploadBytesResumable } from '@react-native-firebase/storage';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import BackButton from '~/components/BackButton';
 
 import DatePicker from '~/components/DatePicker';
 import ImageSelector from '~/components/ImageSelector';
@@ -21,9 +22,10 @@ export default function EditProfile() {
   const [image, setImage] = useState<string | null>(profile?.image || null);
   const [name, setName] = useState<string>(account?.name || '');
   const [gender, setGender] = useState<string>(profile?.gender || '');
-  const [birthDate, setBirthDate] = useState<Date | null>(null);
+  const [birthDate, setBirthDate] = useState<Date | null>(profile?.birthDate ? new Date(profile.birthDate) : null);
   const [pickerVisible, setPickerVisible] = useState(false);
-
+  const [internalLoad,setInternalLoad] = useState(false);
+  const [isChanged, setIsChanged] = useState(false);
   const [isAlertVisible, setIsAlertVisible] = useState(false);
   const router = useRouter();
   const user = auth().currentUser;
@@ -45,73 +47,123 @@ export default function EditProfile() {
     setImage(result.assets[0].uri);
   };
 
-  const updateProfileInformations = async (updateData: Partial<UserProfile>) => {
-    let imageUrl = null;
-    if (updateData.image) {
-      const reference = storage().ref(`${uid}-profile-picture`);
-      await reference.putFile(updateData.image);
-      imageUrl = await reference.getDownloadURL();
+   // age validation
+   const isAgeAbove12 = (date: Date): boolean => {
+    const today = new Date();
+    const birthDate = new Date(date);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDifference = today.getMonth() - birthDate.getMonth();
+  
+    // Adjust age if the birth date hasn't occurred yet this year
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
     }
-
-    try {
-      await firestore()
-        .collection('accounts')
-        .doc(user?.uid)
-        .collection('profile')
-        .doc('profile_info')
-        .update({
-          image: imageUrl || profile?.image,
-          ...updateData,
-        });
-      await firestore().collection('accounts').doc(user?.uid).update({ name });
-
-      console.log('Document successfully updated!');
-    } catch (error) {
-      console.error('Error updating document:', error);
-    }
+  
+    return age > 12;
   };
+
+const updateProfileInformations = async (updateData: Partial<UserProfile>) => {
+  if (!name.trim()) {
+    alert("Name cannot be empty");
+    return null;
+  }
+
+  if (!birthDate || !isAgeAbove12(birthDate)) {
+    alert("You must be older than 12 years old");
+    return null;
+  }
+
+  let imageUrl = image || profile?.image;
+
+  try {
+    if (image && image !== profile?.image) {
+      const storage = getStorage();
+      const imageRef = ref(storage, `${uid}-profile-picture`);
+      const response = await fetch(image);
+      const blob = await response.blob();
+      await uploadBytesResumable(imageRef, blob);
+      imageUrl = await getDownloadURL(imageRef);
+    }
+
+    // Compare new values with existing ones
+    const updatedData: Partial<UserProfile> = {};
+    if (imageUrl !== profile?.image) updatedData.image = imageUrl;
+    if (updateData.gender !== profile?.gender) updatedData.gender = updateData.gender;
+    if (updateData.birthDate !== profile?.birthDate) updatedData.birthDate = updateData.birthDate;
+
+    if (Object.keys(updatedData).length === 0) {
+      return null; // No updates detected
+    }
+
+    await firestore()
+      .collection("accounts")
+      .doc(user?.uid)
+      .collection("profile")
+      .doc("profile_info")
+      .update(updatedData);
+
+    await firestore().collection("accounts").doc(user?.uid).update({ name });
+
+    return true;
+  } catch (error) {
+    console.error("Error updating document:", error);
+    return false;
+  }
+};
 
   const handleClose = () => {
     setIsAlertVisible(false);
   };
 
-  const handleConfirm = () => {
-    updateProfileInformations({
+  const handleConfirm = async () => {
+    setInternalLoad(true);
+    const result = await updateProfileInformations({
       image: image || profile?.image,
       gender,
       birthDate: birthDate?.toISOString() || profile?.birthDate,
     });
-
-    if (profile) {
-      setProfile({
-        ...profile,
-        image: image || profile?.image,
-        gender,
-        birthDate: birthDate?.toISOString() || profile?.birthDate,
-      });
+  
+    if (result) {
+      if (profile) {
+        setProfile({
+          ...profile,
+          image: image || profile?.image,
+          gender,
+          birthDate: birthDate?.toISOString() || profile?.birthDate,
+        });
+      }
+  
+      if (account) {
+        setAccount({
+          ...account,
+          name,
+        });
+      }
+      alert("Profile Updated");
+      router.replace("/(userScreens)/(settings)/settings");
     }
-
-    if (account) {
-      setAccount({
-        ...account,
-        name,
-      });
-    }
-
-    router.push('/(userScreens)/(settings)/settings');
-
+    setInternalLoad(false);
     setIsAlertVisible(false);
   };
+
+  useEffect(() => {
+    setIsChanged(
+      name !== account?.name ||
+      gender !== profile?.gender ||
+      birthDate?.toISOString() !== profile?.birthDate ||
+      image !== profile?.image
+    );
+  }, [name, gender, birthDate, image, account, profile]);
 
   if (loading) {
     return <LoadingAnimation />;
   }
 
   return (
-    <View
+    <ScrollView
       style={{
         backgroundColor: 'white',
-        height: '100%',
+    
       }}>
       <CustomAlert
         visible={isAlertVisible}
@@ -120,15 +172,31 @@ export default function EditProfile() {
         onClose={handleClose}
         onConfirm={handleConfirm}
       />
+      <View style={{padding:20,paddingStart:25}}>
+      <BackButton/>
+      </View>
+      {
+        internalLoad &&
+        <Modal>
+        <View style={{flex:1,alignItems:"center",justifyContent:"center"}}>
+        <ActivityIndicator size={"large"}/>
+        <Text style={{marginTop:10}}>Loading...</Text>                  
+        </View>
+      </Modal>
+      }
+
       <View
         style={{
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          gap: 10,
-          marginTop: 50,
+          gap: 15,
+         
         }}>
+    
+         
+         
         <Text
           style={{
             fontFamily: 'Poppins',
@@ -230,58 +298,39 @@ export default function EditProfile() {
           <DatePicker birthDate={birthDate} setBirthDate={setBirthDate} />
         </View>
 
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            gap: 10,
-            marginTop: 'auto',
-          }}>
+ 
+
           <Pressable
-            onPress={() => router.push('/(userScreens)/(settings)/settings')}
-            style={{
-              backgroundColor: 'gray',
-              paddingVertical: 10,
-              paddingHorizontal: 25,
-              width: 150,
-              borderRadius: 50,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-            <Text
-              style={{
-                fontFamily: 'Poppins-Medium',
-                color: 'white',
-              }}>
-              Cancel
-            </Text>
-          </Pressable>
-          <Pressable
+            disabled={!isChanged}
             onPress={() => {
               setIsAlertVisible(true);
             }}
-            style={{
+            style={isChanged?{
               backgroundColor: colorViolet,
-              paddingVertical: 10,
-              paddingHorizontal: 25,
-              width: 150,
-              borderRadius: 50,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
+              padding:20,
+              borderRadius:30,
+              width:200,
+              marginTop:20
+            }:
+            { backgroundColor: "grey",
+              padding:20,
+              borderRadius:30,
+              width:200,
+              marginTop:20}
+            }>
             <Text
               style={{
-                fontFamily: 'Poppins-Medium',
+                fontSize:16,
                 color: 'white',
+                textAlign:"center",
+                fontWeight:"bold"
               }}>
               Save
             </Text>
           </Pressable>
-        </View>
+      
       </View>
-    </View>
+    </ScrollView>
   );
 }
 

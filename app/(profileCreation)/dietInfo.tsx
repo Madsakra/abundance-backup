@@ -43,19 +43,8 @@ export default function DietInfo() {
 
   // Toggle function
   const toggleCondition = (item: HealthProfileData) => {
-    if (item.name === 'allergies') {
-      // For allergies, allow multiple selections
-      setProfileDiet((prev) => {
-        const exists = prev.some((diet) => diet.id === item.id);
-        if (exists) {
-          // Remove allergy if it exists
-          return prev.filter((diet) => diet.id !== item.id);
-        } else {
-          // Add allergy if it doesn't exist
-          return [...prev, { id: item.id, name: item.name, variation: '' }];
-        }
-      });
-    } else {
+
+ 
       // For other conditions, only one selection allowed
       setProfileDiet((prev) => {
         const exists = prev.some((diet) => diet.id === item.id);
@@ -66,9 +55,9 @@ export default function DietInfo() {
           // Add the selected condition (with default variation)
           return [...prev, { id: item.id, name: item.name, variation: '' }];
         }
-      });
-    }
-  };
+    
+    
+  })};
 
 
   const selectVariation = (conditionId: string, variation: string) => {
@@ -88,7 +77,7 @@ export default function DietInfo() {
   };
 
   const nextSection = async () => {
-    const hasPrimaryDiet = profileDiet.some((diet) => diet.name === 'primary diet');
+    const hasPrimaryDiet = profileDiet.some((diet) => diet.name === 'Primary diet');
 
     if (!hasPrimaryDiet) {
       // Show a warning or alert if no primary diet is selected

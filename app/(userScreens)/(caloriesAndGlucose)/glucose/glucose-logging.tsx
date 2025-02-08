@@ -1,4 +1,4 @@
-import { AntDesign, Ionicons } from '@expo/vector-icons';
+import { AntDesign, Entypo, Ionicons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -21,9 +21,11 @@ import {
 
 export default function GlucoseLogging() {
   const { glucoseLevel } = useLocalSearchParams();
+
   if (typeof glucoseLevel !== 'string') {
     throw new Error('Invalid glucose level');
   }
+  
   const glucoseLevelReading = glucoseLevel.split(' ')[0];
   const glucoseLevelUnit = glucoseLevel.split(' ')[1];
 
@@ -31,7 +33,7 @@ export default function GlucoseLogging() {
     glucoseLevelUnit as GlucoseUnit | 'mmol/L'
   );
   const [glucoseReading, setGlucoseReading] = useState<string>(glucoseLevelReading as string | '');
-  const { membership } = useUserAccount();
+  const { membershipTier } = useUserAccount();
 
   const currentDate = new Date(Date.now());
   const user = auth().currentUser;
@@ -88,9 +90,15 @@ export default function GlucoseLogging() {
         }}>
         Glucose Logging
       </Text>
-      <Pressable
+          {/*BACK BUTTON*/}
+        <View style={{padding:10,paddingBottom:0,flexDirection:"row",alignItems:"center"}}>
+        <Pressable onPress={()=>router.navigate("/(userScreens)/(caloriesAndGlucose)/gateway")}>
+        <Entypo name="chevron-left" size={25} color="white" />
+        </Pressable>
+
+        <Pressable
         onPress={() => {
-          if (membership?.tier_name === 'free') {
+          if (membershipTier?.status!=="active") {
             toastInfo('Upgrade to premium to use this feature.');
             return;
           }
@@ -118,6 +126,10 @@ export default function GlucoseLogging() {
           Camera Logging
         </Text>
       </Pressable>
+
+
+        </View>
+
       <View
         style={{
           backgroundColor: 'white',

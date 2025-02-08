@@ -35,6 +35,21 @@ export default function SimpleInformation() {
     }
   };
 
+  // age validation
+  const isAgeAbove12 = (date: Date): boolean => {
+    const today = new Date();
+    const birthDate = new Date(date);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDifference = today.getMonth() - birthDate.getMonth();
+  
+    // Adjust age if the birth date hasn't occurred yet this year
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+  
+    return age > 12;
+  };
+
   // load pre-existing data , so user don't have to restart
   const loadProfileData = async () => {
     const data = await AsyncStorage.getItem('profileData');
@@ -48,8 +63,12 @@ export default function SimpleInformation() {
   };
 
   const nextSection = async () => {
-    // SAVE THE IMAGE,NAME, GENDER AND DOB
-    // IF SUCCEED, GO TO NEXT PAGE
+
+    // Validate age
+    if (birthDate && !isAgeAbove12(birthDate)) {
+      alert('You must be above 12 years old to proceed.');
+      return;
+    }
 
     try {
       // IMAGE NOT TAKEN INTO CONSIDERATION FOR NOW --- SETTLE LATER
@@ -60,7 +79,7 @@ export default function SimpleInformation() {
           gender,
           birthDate: birthDate ? birthDate.toISOString() : null, // Convert Date to ISO string for storage
         });
-        router.replace('/(profileCreation)/bmrInformation');
+        router.navigate('/(profileCreation)/bmrInformation');
       } else {
         alert('Please Fill Up the form correctly!');
       }

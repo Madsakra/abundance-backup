@@ -48,6 +48,7 @@ export default function DatePicker({ birthDate, setBirthDate }: DatePickerProps)
           is24Hour
           display="default"
           onChange={onChange}
+          maximumDate={new Date()} 
         />
       )}
     </InputContainer>

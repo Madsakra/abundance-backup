@@ -1,5 +1,5 @@
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { doc, updateDoc } from '@react-native-firebase/firestore';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Image, Pressable, Text, TextInput, View } from 'react-native';
@@ -8,7 +8,7 @@ import LoadingAnimation from '~/components/LoadingAnimation';
 import { CustomAlert } from '~/components/alert-dialog/custom-alert-dialog';
 import { useUserProfile } from '~/ctx';
 import { UserProfile } from '~/types/users/profile';
-import { colorViolet } from '~/utils';
+import { colorViolet, db } from '~/utils';
 
 export default function BMRInformations() {
   const { profile, loading } = useUserProfile();
@@ -19,37 +19,66 @@ export default function BMRInformations() {
   const user = auth().currentUser;
 
   const updateBMR = async (updateData: Partial<UserProfile>) => {
-    try {
 
-      await firestore()
-      .collection('accounts')
-      .doc(user?.uid)
-      .collection('profile')
-      .doc('profile_info')
-      .update({
-        height:height,
-        weight:weight,
-      });
-      
-      // Update only specific fields
 
-      console.log('Document successfully updated!');
-    } catch (error) {
-      console.error('Error updating document:', error);
+    // PERFORM CHECKS
+    if (height && weight)
+    {
+      const parsedHeight = parseFloat(height);
+      const parsedWeight = parseFloat(weight);
+        // Validate height and weight
+        if (
+          isNaN(parsedHeight) || isNaN(parsedWeight) ||
+          parsedHeight <= 0 || parsedWeight <= 0 ||
+          parsedHeight > 250 || parsedWeight > 300
+        ) {
+          alert('Please enter valid height (1-250 cm) and weight (1-300 kg).');
+          return false;
+        };
+
+        if (!user) {
+          alert("User not authenticated.");
+          return false;
+        }
+
+        try {
+          const profileDocRef = doc(db, "accounts", user.uid, "profile", "profile_info");
+
+          // Update Firestore document
+          await updateDoc(profileDocRef, {
+            height: parsedHeight,
+            weight: parsedWeight,
+          });
+          return true
+        
+        } catch (error) {
+          console.error('Error updating document:', error);
+        }
+    
     }
+
+
+
   };
 
   const handleClose = () => {
     setIsAlertVisible(false);
   };
 
-  const handleConfirm = () => {
-    updateBMR({
+  const handleConfirm = async () => {
+    const result = await updateBMR({
       height: parseInt(height, 10),
       weight: parseInt(weight, 10),
     });
-    router.push('/(userScreens)/(settings)/settings');
+
+    if (result)
+    {
+      setIsAlertVisible(false);
+      alert("BMR Info updated successfully")
+      router.navigate('/(userScreens)/(settings)/settings');
+    };
     setIsAlertVisible(false);
+  
   };
 
   if (loading) {

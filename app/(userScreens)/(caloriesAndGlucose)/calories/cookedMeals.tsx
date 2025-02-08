@@ -1,9 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Entypo, Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import axios from 'axios';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import BackButton from '~/components/BackButton';
 
 import SearchSection from '~/components/SearchSection';
 import Toast from '~/components/notifications/toast';
@@ -17,7 +18,7 @@ export default function CookedMeals() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [isRenewing, setIsRenewing] = useState(false); // Track if renewing search
-  const { membership } = useUserAccount();
+  const { membershipTier } = useUserAccount();
   const router = useRouter();
 
   const baseUrl = 'https://api.edamam.com/api/recipes/v2';
@@ -73,7 +74,7 @@ export default function CookedMeals() {
       onPress={() => {
         setFoodName('');
         setData([]);
-        router.push({
+        router.replace({
           pathname: '/(userScreens)/(caloriesAndGlucose)/calories/meal-detail/meal-detail',
           params: { item: JSON.stringify(item) },
         });
@@ -121,13 +122,22 @@ export default function CookedMeals() {
     <View style={{ flex: 1 }}>
       <Toast ref={toastRef} />
       <View style={styles.topHeaderContainer}>
+
+        {/*BACK BUTTON*/}
+        <View style={{padding:20,paddingBottom:0}}>
+        <Pressable onPress={()=>router.navigate("/(userScreens)/(caloriesAndGlucose)/gateway")}>
+        <Entypo name="chevron-left" size={25} color="white" />
+        </Pressable>
+        </View>
+  
+   
         {/*FIRST ROW*/}
         <View style={styles.firstRowContainer}>
           <Text style={styles.headerText}>Cooked Meals</Text>
 
           <Pressable
             onPress={() => {
-              if (membership?.tier_name === 'free') {
+              if (membershipTier?.status !=="active") {
                 toastInfo('Upgrade to premium to use this feature.');
                 return;
               }

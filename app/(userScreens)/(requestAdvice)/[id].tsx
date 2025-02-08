@@ -8,6 +8,7 @@ import Stars from '~/components/Stars';
 import { FontAwesome } from '@expo/vector-icons';
 import {  useUserAccount, useUserProfile } from '~/ctx';
 import auth from '@react-native-firebase/auth';
+import { toastError, toastInfo, toastSuccess } from '~/utils';
 
 export default function NutritionistDetail() {
 
@@ -17,7 +18,8 @@ export default function NutritionistDetail() {
     const [displayReviews,setDisplayReviews] = useState<DisplayedReviews[]|null>([]);
     const [loading,setLoading] = useState(false);
     const {profile} = useUserProfile();
-    const {account} = useUserAccount()
+    const {account,membershipTier} = useUserAccount()
+
 
     const fetchData = async ()=>{
         setLoading(true);
@@ -62,73 +64,72 @@ export default function NutritionistDetail() {
     };
 
     const sendRequest = async () => {
-        setLoading(true);
-        const documentId = Array.isArray(id) ? id[0] : id;
-        const userNowUID = auth().currentUser?.uid
-       
-        try {
-          if (userNowUID && profile) {
-            const requestDocRef = firestore()
-              .collection("accounts")
-              .doc(documentId)
-              .collection("client_requests")
-              .doc(userNowUID)
-              .collection("profile")
-              .doc("profile_info");
-
-              const userAccountRef = firestore()
-              .collection("accounts")
-              .doc(documentId)
-              .collection("client_requests")
-              .doc(userNowUID)
-             
-              // FOR USER'S OWN REFERENCE
-              const statusRef = firestore()
-              .collection("accounts")
-              .doc(userNowUID)
-              .collection("tailored_advice")
-              .doc(nutritionistInfo?.id)
-
-
-      
-              
-      
-            // Check if the document already exists
-            const requestSnapshot = await requestDocRef.get();
-
-            if (requestSnapshot.exists) {
-              alert("You have already sent a request to this nutritionist.");
-            } else {
-              // If it doesn't exist, send the request
-              await requestDocRef.set(profile);
-              if (account)
-              {
-                await userAccountRef.set({
-                  email:account.email,
-                  name:account.name,
-                  role:account.role,
-                });
-              }
-
-              
-               // FOR USER'S OWN REFERENCE
-              await statusRef.set({
-                status:"pending",
-                nutritionistInfo:nutritionistInfo
-              })
-
+      setLoading(true);
+        if (membershipTier?.status === "active")
+        {
+          const documentId = Array.isArray(id) ? id[0] : id;
+          const userNowUID = auth().currentUser?.uid
          
+          try {
+            if (userNowUID && profile) {
+              const requestDocRef = firestore()
+                .collection("accounts")
+                .doc(documentId)
+                .collection("client_requests")
+                .doc(userNowUID)
+                .collection("profile")
+                .doc("profile_info");
+  
+                const userAccountRef = firestore()
+                .collection("accounts")
+                .doc(documentId)
+                .collection("client_requests")
+                .doc(userNowUID)
+               
+                // FOR USER'S OWN REFERENCE
+                const statusRef = firestore()
+                .collection("accounts")
+                .doc(userNowUID)
+                .collection("tailored_advice")
+                .doc(nutritionistInfo?.id)
 
-              alert(`Request for Advice sent to ${nutritionistInfo?.profile.title}`);
+              // Check if the document already exists
+              const requestSnapshot = await requestDocRef.get();
+  
+              if (requestSnapshot.exists) {
+                toastError("You have already sent a request to this nutritionist.");
+              } else {
+                // If it doesn't exist, send the request
+                await requestDocRef.set(profile);
+                if (account)
+                {
+                  await userAccountRef.set({
+                    email:account.email,
+                    name:account.name,
+                    role:account.role,
+                  });
+                }
+                 // FOR USER'S OWN REFERENCE
+                await statusRef.set({
+                  status:"pending",
+                  nutritionistInfo:nutritionistInfo
+                })
+                toastSuccess(`Request for Advice sent to ${nutritionistInfo?.profile.title}`);
+                router.navigate("/(requestAdvice)/viewNutritionists");
+              }
             }
+          } catch (err) {
+            console.log("Error sending request:", err);
+            alert("Failed to send advice request.");
           }
-        } catch (err) {
-          console.log("Error sending request:", err);
-          alert("Failed to send advice request.");
         }
-      
+
+        else{
+          toastInfo("Only Active Premium Members are allowed to send request!")
+        }
+
         setLoading(false);
-        router.navigate("/(requestAdvice)/viewNutritionists")
+       
       };
       
 

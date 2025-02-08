@@ -35,9 +35,7 @@ export default function SearchSection({ value, setValue, searchFunction }: Searc
         value={value}
         onChangeText={setValue}
       />
-      <Pressable style={styles.searchButton} onPress={searchFunction}>
-        <Ionicons name="search-outline" size={20} color="black" />
-      </Pressable>
+
     </View>
   );
 }
@@ -47,7 +45,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     padding: 10,
     margin: 15,
-    flex: 0.9,
+    flex: 1,
     justifyContent: 'center',
     borderRadius: 5,
   },

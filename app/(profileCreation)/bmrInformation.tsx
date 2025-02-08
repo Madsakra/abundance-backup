@@ -25,26 +25,40 @@ export default function BMRInformation() {
   };
 
   const nextSection = async () => {
-    try {
-      // Check if height and weight are valid (not null and not 0)
-      if (height && weight && Number(height) > 0 && Number(weight) > 0) {
-        // Proceed to the next section
-        // MAKE CALL TO SQL LITE TO SAVE DATA
+    
+    if (height && weight)
+    {
+      try {
+      
+        const parsedHeight = parseFloat(height);
+        const parsedWeight = parseFloat(weight);
+    
+        // Validate height and weight
+        if (
+          isNaN(parsedHeight) || isNaN(parsedWeight) ||
+          parsedHeight <= 0 || parsedWeight <= 0 ||
+          parsedHeight > 250 || parsedWeight > 300
+        ) {
+          alert('Please enter valid height (1-250 cm) and weight (1-300 kg).');
+          return;
+        }
+    
+        // Save data to SQLite
         await updateLocalProfileFields({
-          height,
-          weight,
+          height: parsedHeight,
+          weight: parsedWeight,
         });
-
+    
+        // Navigate to the next section
         router.replace('/(profileCreation)/healthCondition');
-      } else {
-        // Alert user if height or weight is invalid
-        alert('Please fill in both height and weight correctly! Values must be greater than 0.');
+      } catch (err) {
+        console.error('Error saving data or navigating:', err);
+        alert('Something went wrong. Please try again!');
       }
-    } catch (err) {
-      console.error('Error saving data or navigating:', err);
-      alert('Something went wrong. Please try again!');
     }
+
   };
+  
 
   useEffect(() => {
     loadProfileData();
