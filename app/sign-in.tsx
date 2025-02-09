@@ -132,11 +132,7 @@ export default function SignIn() {
             title="Login"
           />
 
-          <Pressable style={styles.forgetPassword}>
-            <Text style={{ color: '#989595', fontFamily: 'Poppins-Regular', fontSize: 14 }}>
-              Forget Password?
-            </Text>
-          </Pressable>
+
         </View>
       </View>
     );
