@@ -342,9 +342,10 @@ export const predictGlucose = async (
   }));
 
   const now = new Date();
-  const timestamp1 = new Date(now.getTime() + 4 * 60 * 60 * 1000).toISOString();
-  const timestamp2 = new Date(now.getTime() + 8 * 60 * 60 * 1000).toISOString();
-  const timestamp3 = new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString();
+
+  const timestamp1 = new Date(now.getTime() + 4 * 60 * 60 * 1000);
+  const timestamp2 = new Date(timestamp1.getTime() + 4 * 60 * 60 * 1000);
+  const timestamp3 = new Date(timestamp2.getTime() + 4 * 60 * 60 * 1000);
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o-mini',

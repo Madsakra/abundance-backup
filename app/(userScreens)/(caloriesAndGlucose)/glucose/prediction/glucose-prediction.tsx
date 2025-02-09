@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import auth from '@react-native-firebase/auth';
 import firestore, { Timestamp } from '@react-native-firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
@@ -20,14 +21,7 @@ import { PersonalInformation } from '~/components/profiles/personal-informations
 import { useUserProfile } from '~/ctx';
 import { CaloriesOutputTracking, CaloriesTracking } from '~/types/common/calories';
 import { GlucoseReading } from '~/types/common/glucose';
-import {
-  colorGreen,
-  currentUser,
-  formatFirestoreTime,
-  toastError,
-  toastRef,
-  toastSuccess,
-} from '~/utils';
+import { colorGreen, formatFirestoreTime, toastError, toastRef, toastSuccess } from '~/utils';
 
 export default function GlucosePrediction() {
   const { profile } = useUserProfile();
@@ -42,6 +36,7 @@ export default function GlucosePrediction() {
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
 
+  const currentUser = auth().currentUser;
   const userId = currentUser?.uid || '';
 
   const calculateBMR = (weight: number, height: number, age: number, gender: string) => {
@@ -166,7 +161,7 @@ export default function GlucosePrediction() {
         batch.set(newDocRef, {
           reading: prediction.reading,
           unit: 'mmol/L',
-          timestamp: new Date(prediction.timestamp), // Store as a Date object
+          timestamp: Timestamp.fromDate(new Date(prediction.timestamp)), // Store as a Date object
         });
       });
 
@@ -184,6 +179,7 @@ export default function GlucosePrediction() {
       setLoading(true);
 
       const db = firestore();
+      console.log(userId);
       const predictionRef = db.collection(`accounts/${userId}/glucose-prediction-logs`);
 
       const latestPredictionSnapshot = await predictionRef
