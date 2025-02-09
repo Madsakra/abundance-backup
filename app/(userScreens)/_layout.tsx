@@ -74,6 +74,9 @@ function CustomDrawerContent(props: any) {
 }
 
 const DrawerLayout = () => {
+
+  const {membershipTier} = useUserAccount();
+
   return (
     <Drawer
       drawerContent={CustomDrawerContent}
@@ -127,9 +130,22 @@ const DrawerLayout = () => {
       <Drawer.Screen
         name="(dataCoRelations)"
         listeners={({ navigation }) => ({
-          drawerItemPress: () => {
-            // when user clicks on navigation, send them back to gateway
-            router.replace('/(userScreens)/(dataCoRelations)/relation-graph');
+          drawerItemPress: (e) => {
+
+              // Ensure membershipTier is not null and check its status
+              if ( membershipTier?.status !== "active") {
+                alert("Please upgrade to premium to use this feature");
+                e.preventDefault();
+                return; // Stop execution here
+              }
+
+              else{
+              // If membership is active, navigate to the screen
+              router.replace('/(userScreens)/(dataCoRelations)/relation-graph');
+
+              }
+
+    
           },
         })}
         options={{
@@ -143,9 +159,19 @@ const DrawerLayout = () => {
       <Drawer.Screen
         name="(requestAdvice)"
         listeners={({ navigation }) => ({
-          drawerItemPress: () => {
-            // when user clicks on navigation, send them back to gateway
-            router.replace('/(userScreens)/(requestAdvice)/viewNutritionists');
+          drawerItemPress: (e) => {
+
+            if (membershipTier?.status !== "active")
+            {
+            alert("Please upgrade to premium feature to use this feature");
+            e.preventDefault();
+            return;
+            }
+
+            else{
+              router.replace('/(userScreens)/(requestAdvice)/viewNutritionists');
+             
+            }
           },
         })}
         options={{
@@ -161,9 +187,21 @@ const DrawerLayout = () => {
       <Drawer.Screen
         name="(nutriAdvice)"
         listeners={({ navigation }) => ({
-          drawerItemPress: () => {
-            // when user clicks on navigation, send them back to gateway
-            router.replace('/(userScreens)/(nutriAdvice)/allFeedback');
+          drawerItemPress: (e) => {
+      
+
+            if (membershipTier?.status !=="active")
+            {
+               // when user clicks on navigation, send them back to gateway
+               alert("Please upgrade to premium feature to use this feature")
+                e.preventDefault();
+              }
+
+            else{
+              router.replace('/(userScreens)/(nutriAdvice)/allFeedback');
+            }
+
+
           },
         })}
         options={{

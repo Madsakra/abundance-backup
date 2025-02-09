@@ -48,7 +48,7 @@ export default function ArticleDetails() {
 
           {/* Header Section*/}
           
-        <Pressable style={[styles.section,{flexDirection:"row",alignItems:"center",gap:20}]} onPress={()=>router.navigate(`/(requestAdvice)/${article?.writtenBy?.uid}`)}>
+        <Pressable style={[styles.section,{flexDirection:"row",alignItems:"center",gap:20}]} >
           <Image source={{uri:article?.writtenBy?.avatar}} style={styles.avatar}/>
           <View>
           <Text style={{fontWeight:"bold"}}>{article.writtenBy?.name}</Text>
