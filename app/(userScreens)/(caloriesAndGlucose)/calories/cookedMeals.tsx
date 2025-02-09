@@ -3,9 +3,17 @@ import { FlashList } from '@shopify/flash-list';
 import axios from 'axios';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import BackButton from '~/components/BackButton';
+import {
+  ActivityIndicator,
+  Image,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
+import BackButton from '~/components/BackButton';
 import SearchSection from '~/components/SearchSection';
 import Toast from '~/components/notifications/toast';
 import { useUserAccount } from '~/ctx';
@@ -122,22 +130,20 @@ export default function CookedMeals() {
     <View style={{ flex: 1 }}>
       <Toast ref={toastRef} />
       <View style={styles.topHeaderContainer}>
-
         {/*BACK BUTTON*/}
-        <View style={{padding:20,paddingBottom:0}}>
-        <Pressable onPress={()=>router.navigate("/(userScreens)/(caloriesAndGlucose)/gateway")}>
-        <Entypo name="chevron-left" size={25} color="white" />
-        </Pressable>
+        <View style={{ padding: 20, paddingBottom: 0 }}>
+          <Pressable onPress={() => router.navigate('/(userScreens)/(caloriesAndGlucose)/gateway')}>
+            <Entypo name="chevron-left" size={25} color="white" />
+          </Pressable>
         </View>
-  
-   
+
         {/*FIRST ROW*/}
         <View style={styles.firstRowContainer}>
           <Text style={styles.headerText}>Cooked Meals</Text>
 
           <Pressable
             onPress={() => {
-              if (membershipTier?.status !=="active") {
+              if (membershipTier?.status !== 'active') {
                 toastInfo('Upgrade to premium to use this feature.');
                 return;
               }
