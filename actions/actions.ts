@@ -1,4 +1,4 @@
-import firestore, { Timestamp } from '@react-native-firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import OpenAI from 'openai';
 
 import { CaloriesOutputTracking, CaloriesTracking } from '~/types/common/calories';
@@ -171,6 +171,36 @@ export async function fetchAllGlucoseReadingForToday(
   }
 }
 
+export async function fetchAllGlucosePredictionForToday(
+  userId: string,
+  setTotalGlucosePredictionToday: (data: GlucoseReading[]) => void
+): Promise<() => void> {
+  if (userId === '') {
+    return () => {};
+  }
+
+  try {
+    return firestore()
+      .collection(`accounts/${userId}/glucose-prediction-logs`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const glucoseLogs = snapshot.docs.map((doc) => doc.data() as GlucoseReading);
+            setTotalGlucosePredictionToday(glucoseLogs);
+          } else {
+            setTotalGlucosePredictionToday([]);
+          }
+        },
+        (error) => {
+          console.error('Error fetching real-time glucose readings:', error);
+        }
+      );
+  } catch (error) {
+    console.error('Error setting up real-time listener for glucose logs:', error);
+    return () => {};
+  }
+}
+
 export async function fetchGlucoseReadingsOverall(
   userId: string,
   setGlucoseOverall: (data: GlucoseReading[]) => void
@@ -280,8 +310,8 @@ export const predictGlucose = async (
   caloriesOutput: CaloriesOutputTracking[]
 ) => {
   const convertToDate = (timestamp: any): Date => {
-    if (timestamp instanceof Timestamp) {
-      return timestamp.toDate();
+    if (timestamp instanceof Date) {
+      return timestamp;
     } else if (typeof timestamp === 'object' && 'seconds' in timestamp) {
       return new Date(timestamp.seconds * 1000);
     } else {
@@ -311,36 +341,75 @@ export const predictGlucose = async (
     distance: activity.StepTrack?.distance || 0,
   }));
 
+  const now = new Date();
+  const timestamp1 = new Date(now.getTime() + 4 * 60 * 60 * 1000).toISOString();
+  const timestamp2 = new Date(now.getTime() + 8 * 60 * 60 * 1000).toISOString();
+  const timestamp3 = new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString();
+
   const response = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
       {
         role: 'user',
         content: `
-        Predict the next glucose reading from the current time: ${new Date().toISOString()}.
-        - Past glucose readings: ${JSON.stringify(formattedGlucoseData)}
-        - BMR: ${bmr}
-        - Recent food intake: ${JSON.stringify(formattedFoodIntake)}
-        - Recent calories burned: ${JSON.stringify(formattedCaloriesOutput)}
+      Predict the next three glucose readings from the current time: ${now.toISOString()}.
+      - Each prediction must be **exactly 4 hours apart** from the previous one.
+      - Use these timestamps for the predictions:
+        - First prediction: ${timestamp1}
+        - Second prediction: ${timestamp2}
+        - Third prediction: ${timestamp3}
+      - Past glucose readings: ${JSON.stringify(formattedGlucoseData)}
+      - BMR: ${bmr}
+      - Recent food intake: ${JSON.stringify(formattedFoodIntake)}
+      - Recent calories burned: ${JSON.stringify(formattedCaloriesOutput)}
 
-        Respond with only a JSON object in this format:
-        { "reading": number, "timestamp": string } // Timestamp should be in ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ)
-        `,
+      Respond with **only** a JSON array containing **3 objects**, replacing TIMESTAMP_X with the correct timestamps:
+      [
+        { "reading": number, "timestamp": "${timestamp1}" },
+        { "reading": number, "timestamp": "${timestamp2}" },
+        { "reading": number, "timestamp": "${timestamp3}" }
+      ]
+      Each timestamp must remain unchanged and be in ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ).
+      `,
       },
     ],
-    max_tokens: 50,
+    max_tokens: 200,
     temperature: 0.7,
-    response_format: { type: 'json_object' },
+    response_format: { type: 'json_object' }, // Ensure JSON array response
   });
 
   try {
-    if (!response.choices || !response.choices[0]?.message?.content) {
-      throw new Error('Empty or invalid OpenAI response');
+    const responseContent = response.choices?.[0]?.message?.content?.trim() || '';
+
+    if (!responseContent) {
+      throw new Error('OpenAI returned an empty response');
     }
 
-    const prediction = response.choices[0].message.content;
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(responseContent);
+    } catch (error) {
+      console.error('JSON Parsing Error:', error, '\nRaw Response Content:', responseContent);
+      throw new Error('Failed to parse OpenAI response');
+    }
 
-    return prediction;
+    if (
+      !parsedResponse.predictions ||
+      !Array.isArray(parsedResponse.predictions) ||
+      parsedResponse.predictions.length !== 3
+    ) {
+      console.error('Unexpected OpenAI response format:', parsedResponse);
+      throw new Error('Invalid prediction format from OpenAI');
+    }
+
+    // Extract the actual predictions array
+    const predictions = parsedResponse.predictions.map((pred: any) => ({
+      reading: pred.reading,
+      timestamp: new Date(pred.timestamp).toISOString(),
+    }));
+
+    console.log('Formatted Predictions:', predictions);
+    return predictions;
   } catch (error) {
     console.error('Failed to parse OpenAI response:', error);
     return null;

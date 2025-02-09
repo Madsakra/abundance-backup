@@ -1,9 +1,10 @@
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { Timestamp } from '@react-native-firebase/firestore';
+import firestore, { Timestamp } from '@react-native-firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
 import {
+  fetchAllGlucosePredictionForToday,
   fetchCaloriesConsumed,
   fetchCaloriesConsumedOverall,
   fetchCaloriesOutput,
@@ -12,12 +13,21 @@ import {
 } from '~/actions/actions';
 import { PersonalInformationType } from '~/app/(userScreens)/(settings)/profile/profile';
 import FunctionTiedButton from '~/components/FunctionTiedButton';
+import { CustomAlert } from '~/components/alert-dialog/custom-alert-dialog';
 import CaloriesGlucoseCorrelationCard from '~/components/cards/co-relations-graph-card';
+import Toast from '~/components/notifications/toast';
 import { PersonalInformation } from '~/components/profiles/personal-informations';
 import { useUserProfile } from '~/ctx';
 import { CaloriesOutputTracking, CaloriesTracking } from '~/types/common/calories';
 import { GlucoseReading } from '~/types/common/glucose';
-import { colorGreen, currentUser } from '~/utils';
+import {
+  colorGreen,
+  currentUser,
+  formatFirestoreTime,
+  toastError,
+  toastRef,
+  toastSuccess,
+} from '~/utils';
 
 export default function GlucosePrediction() {
   const { profile } = useUserProfile();
@@ -27,7 +37,10 @@ export default function GlucosePrediction() {
   const [claoriesConsumedToday, setCaloriesConsumedToday] = useState<CaloriesTracking[]>([]);
   const [caloriesOutputToday, setCaloriesOutputToday] = useState<CaloriesOutputTracking[]>([]);
   const [glucoseOverall, setGlucoseOverall] = useState<GlucoseReading[]>([]);
+  const [glucosePrediction, setGlucosePrediction] = useState<GlucoseReading[]>([]);
+
   const [loading, setLoading] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   const userId = currentUser?.uid || '';
 
@@ -129,11 +142,70 @@ export default function GlucosePrediction() {
     },
   ];
 
+  const saveGlucoseReadings = async (
+    predictions: { reading: number; timestamp: string }[],
+    userId: string
+  ) => {
+    if (!predictions || predictions.length === 0) {
+      toastError('Glucose Prediction failed');
+      return;
+    }
+
+    try {
+      const db = firestore();
+      const predictionRef = db.collection(`accounts/${userId}/glucose-prediction-logs`);
+      const batch = db.batch();
+
+      const existingDocs = await predictionRef.get();
+      existingDocs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+
+      predictions.forEach((prediction) => {
+        const newDocRef = predictionRef.doc(); // Create new document
+        batch.set(newDocRef, {
+          reading: prediction.reading,
+          unit: 'mmol/L',
+          timestamp: new Date(prediction.timestamp), // Store as a Date object
+        });
+      });
+
+      await batch.commit();
+
+      toastSuccess('Glucose Predictions Saved Successfully');
+    } catch (error) {
+      console.error('Error saving glucose predictions:', error);
+      toastError('Failed to save glucose predictions');
+    }
+  };
+
   const handlePredictGlucose = async () => {
     try {
       setLoading(true);
 
-      const predictionData = await predictGlucose(
+      const db = firestore();
+      const predictionRef = db.collection(`accounts/${userId}/glucose-prediction-logs`);
+
+      const latestPredictionSnapshot = await predictionRef
+        .orderBy('timestamp', 'desc')
+        .limit(1)
+        .get();
+
+      if (!latestPredictionSnapshot.empty) {
+        const latestPrediction = latestPredictionSnapshot.docs[0].data();
+        const lastPredictionTime = new Date(latestPrediction.timestamp.toDate()); // Convert Firestore Timestamp to Date
+
+        const now = new Date();
+        const timeDiffHours = (now.getTime() - lastPredictionTime.getTime()) / (1000 * 60 * 60); // Convert ms to hours
+
+        if (timeDiffHours < 4) {
+          setVisible(true);
+          setLoading(false);
+          return;
+        }
+      }
+
+      const predictions = await predictGlucose(
         glucoseOverall,
         bmr,
         claoriesConsumedToday,
@@ -142,9 +214,16 @@ export default function GlucosePrediction() {
 
       setLoading(false);
 
-      console.log('Prediction Data:', predictionData);
+      if (!Array.isArray(predictions) || predictions.length !== 3) {
+        console.error('Invalid OpenAI response format:', predictions);
+        toastError('Glucose Prediction failed');
+        return;
+      }
+
+      await saveGlucoseReadings(predictions, userId);
     } catch (error) {
       console.error('Error predicting glucose:', error);
+      toastError('Error predicting glucose');
       setLoading(false);
     }
   };
@@ -154,6 +233,7 @@ export default function GlucosePrediction() {
     let unsubscribeCaloriesConsumedToday: () => void;
     let unsubscribeCaloriesOutputToday: () => void;
     let unsubscribeGlucoseOverall: () => void;
+    let unsubscribeGlucosePrediction: () => void;
 
     (async () => {
       unsbuscribeCaloriesConsumedOverall = await fetchCaloriesConsumedOverall(
@@ -171,6 +251,10 @@ export default function GlucosePrediction() {
         setCaloriesOutputToday
       );
       unsubscribeGlucoseOverall = await fetchGlucoseReadingsOverall(userId, setGlucoseOverall);
+      unsubscribeGlucosePrediction = await fetchAllGlucosePredictionForToday(
+        userId,
+        setGlucosePrediction
+      );
     })();
 
     return () => {
@@ -178,6 +262,7 @@ export default function GlucosePrediction() {
       if (unsubscribeCaloriesConsumedToday) unsubscribeCaloriesConsumedToday();
       if (unsubscribeCaloriesOutputToday) unsubscribeCaloriesOutputToday();
       if (unsubscribeGlucoseOverall) unsubscribeGlucoseOverall();
+      if (unsubscribeGlucosePrediction) unsubscribeGlucosePrediction();
     };
   }, [currentDate, userId]);
 
@@ -186,6 +271,14 @@ export default function GlucosePrediction() {
       style={{
         backgroundColor: colorGreen,
       }}>
+      <Toast ref={toastRef} />
+      <CustomAlert
+        visible={visible}
+        title="Error Predicting glucose."
+        message="You can only predict glucose once every 4 hours."
+        onClose={() => setVisible(false)}
+        error
+      />
       <Text
         style={{
           color: 'white',
@@ -248,6 +341,46 @@ export default function GlucosePrediction() {
         {personalInformation.map((info, index) => (
           <PersonalInformation key={index} {...info} />
         ))}
+      </View>
+
+      <View
+        style={{
+          marginTop: 20,
+          marginHorizontal: 30,
+        }}>
+        {glucosePrediction.length > 0 &&
+          glucosePrediction.map((glucose, index) => (
+            <View
+              key={index}
+              style={{
+                backgroundColor: 'white',
+                padding: 10,
+                borderRadius: 10,
+                marginVertical: 10,
+              }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: 'bold',
+                  marginBottom: 5,
+                }}>
+                Prediction Set {index + 1}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 16,
+                  marginBottom: 5,
+                }}>
+                Time: {formatFirestoreTime(glucose.timestamp)}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 16,
+                }}>
+                Glucose Level: {Math.floor(glucose.reading * 100) / 100} mmol/L
+              </Text>
+            </View>
+          ))}
       </View>
 
       {loading ? (
