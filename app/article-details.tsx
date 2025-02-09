@@ -1,7 +1,15 @@
 import { Entypo } from '@expo/vector-icons';
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Image, ActivityIndicator, Pressable } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Image,
+  ActivityIndicator,
+  Pressable,
+} from 'react-native';
 
 import { fetchArticleById } from '~/actions/actions';
 
@@ -46,15 +54,16 @@ export default function ArticleDetails() {
           <Text style={styles.title}>{article.title}</Text>
         </View>
 
-          {/* Header Section*/}
-          
-        <Pressable style={[styles.section,{flexDirection:"row",alignItems:"center",gap:20}]} onPress={()=>router.navigate(`/(requestAdvice)/${article?.writtenBy?.uid}`)}>
-          <Image source={{uri:article?.writtenBy?.avatar}} style={styles.avatar}/>
-          <View>
-          <Text style={{fontWeight:"bold"}}>{article.writtenBy?.name}</Text>
-          <Text>{article?.writtenBy?.email}</Text>
-          </View>
+        {/* Header Section*/}
 
+        <Pressable
+          style={[styles.section, { flexDirection: 'row', alignItems: 'center', gap: 20 }]}
+          onPress={() => router.navigate(`/(requestAdvice)/${article?.writtenBy?.uid}`)}>
+          <Image source={{ uri: article?.writtenBy?.avatar }} style={styles.avatar} />
+          <View>
+            <Text style={{ fontWeight: 'bold' }}>{article.writtenBy?.name}</Text>
+            <Text>{article?.writtenBy?.email}</Text>
+          </View>
         </Pressable>
 
         {/* Content Section */}
@@ -107,9 +116,9 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   errorText: { fontSize: 18, color: 'red', textAlign: 'center', marginTop: 20 },
-  avatar:{
-  width:40,
-  height:40,
-  borderRadius:50
-  }
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 50,
+  },
 });

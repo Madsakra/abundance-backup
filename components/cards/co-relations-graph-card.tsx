@@ -1,5 +1,6 @@
 import { FontAwesome } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
+import { Timestamp } from '@react-native-firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
@@ -12,12 +13,14 @@ type CorrelationCardProps = {
   currentDate: Date;
   setCurrentDate: React.Dispatch<React.SetStateAction<Date>>;
   showDate?: boolean;
+  color?: string;
 };
 
 const CaloriesGlucoseCorrelationCard = ({
   currentDate,
   setCurrentDate,
   showDate = true,
+  color = 'black',
 }: CorrelationCardProps) => {
   const [caloriesConsumed, setCaloriesConsumed] = useState<CaloriesTracking[]>([]);
   const [glucoseOverall, setGlucoseOverall] = useState<GlucoseReading[]>([]);
@@ -44,25 +47,49 @@ const CaloriesGlucoseCorrelationCard = ({
       monthlyGlucose[month] = 0;
     });
 
+    // Helper function to convert Firebase Timestamp or Unix timestamp to Date
+    const convertToDate = (timestamp: any): Date => {
+      if (timestamp instanceof Timestamp) {
+        return timestamp.toDate();
+      } else if (typeof timestamp === 'object' && 'seconds' in timestamp) {
+        return new Date(timestamp.seconds * 1000);
+      } else {
+        return new Date(timestamp);
+      }
+    };
+
     // Aggregate Calories Data
     caloriesConsumed.forEach((entry) => {
-      const monthName = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(
-        entry.timestamp
-      );
-      if (monthlyCalories[monthName] !== undefined) {
-        monthlyCalories[monthName] += entry.amount || 0;
+      const date = convertToDate(entry.timestamp);
+
+      if (!isNaN(date.getTime())) {
+        const monthName = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
+        if (monthlyCalories[monthName] !== undefined) {
+          monthlyCalories[monthName] += entry.amount || 0;
+        }
+      } else {
+        console.warn('Invalid date format in CaloriesTracking:', entry.timestamp);
       }
     });
 
     // Aggregate Glucose Data
     glucose.forEach((entry) => {
-      const monthName = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(
-        entry.timestamp
-      );
-      if (monthlyGlucose[monthName] !== undefined) {
-        // Convert glucose to mmol/L if it's in mg/dL
-        const value = entry.unit === 'mg/dL' ? entry.reading / 18.0182 : entry.reading;
-        monthlyGlucose[monthName] += value;
+      const date = convertToDate(entry.timestamp);
+
+      if (!isNaN(date.getTime())) {
+        const monthName = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
+        if (monthlyGlucose[monthName] !== undefined) {
+          let glucoseValue = entry.reading || 0;
+
+          // Convert glucose to mmol/L if it's in mg/dL
+          if (entry.unit === 'mg/dL') {
+            glucoseValue /= 18.0182;
+          }
+
+          monthlyGlucose[monthName] += glucoseValue;
+        }
+      } else {
+        console.warn('Invalid date format in GlucoseReading:', entry.timestamp);
       }
     });
 
@@ -108,12 +135,19 @@ const CaloriesGlucoseCorrelationCard = ({
             onPress={() =>
               setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)))
             }>
-            <FontAwesome name="chevron-left" size={18} color="black" />
+            <FontAwesome name="chevron-left" size={18} color={color} />
           </TouchableOpacity>
 
           <View style={styles.dateContainer}>
-            <FontAwesome name="calendar" size={16} color="black" />
-            <Text style={styles.dateText}> {formattedCurrentDate} </Text>
+            <FontAwesome name="calendar" size={16} color={color} />
+            <Text
+              style={{
+                ...styles.dateText,
+                color,
+              }}>
+              {' '}
+              {formattedCurrentDate}{' '}
+            </Text>
           </View>
 
           <TouchableOpacity
@@ -126,14 +160,14 @@ const CaloriesGlucoseCorrelationCard = ({
               }
               setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)));
             }}>
-            <FontAwesome name="chevron-right" size={18} color="black" />
+            <FontAwesome name="chevron-right" size={18} color={color} />
           </TouchableOpacity>
         </View>
       )}
 
       {/* Card Content */}
       <View style={styles.card}>
-        <Text style={styles.title}>Calories vs Glucose Corelations</Text>
+        <Text style={styles.title}>Calories and Glucose Corelations</Text>
 
         <LineChart
           data={{

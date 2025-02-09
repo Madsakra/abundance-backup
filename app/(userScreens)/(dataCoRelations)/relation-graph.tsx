@@ -55,7 +55,11 @@ export default function RelationGraph() {
       style={{
         backgroundColor: 'white',
       }}>
-      <CaloriesGlucoseCorrelationCard currentDate={currentDate} setCurrentDate={setCurrentDate} />
+      <CaloriesGlucoseCorrelationCard
+        currentDate={currentDate}
+        setCurrentDate={setCurrentDate}
+        showDate={false}
+      />
       <Text
         style={{
           fontSize: 24,
@@ -76,7 +80,7 @@ export default function RelationGraph() {
           paddingHorizontal: 20,
         }}>
         <ActionCard
-          href="/(userScreens)/(claloriesAndGlucose)/calories/cookedMeals"
+          href="/(userScreens)/(caloriesAndGlucose)/glucose/prediction/glucose-prediction"
           title="Predict Glucose"
           description="Predict glucose with your data"
           imageKey="predictGlucose"

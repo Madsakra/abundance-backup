@@ -1,7 +1,11 @@
-import firestore from '@react-native-firebase/firestore';
+import firestore, { Timestamp } from '@react-native-firebase/firestore';
+import OpenAI from 'openai';
 
 import { CaloriesOutputTracking, CaloriesTracking } from '~/types/common/calories';
 import { GlucoseReading } from '~/types/common/glucose';
+import { OPENAI_API_KEY } from '~/utils';
+
+const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
 export async function fetchCaloriesConsumed(
   timestamp: Date,
@@ -268,3 +272,77 @@ export async function fetchArticleById(
       }
     );
 }
+
+export const predictGlucose = async (
+  pastGlucoseData: GlucoseReading[],
+  bmr: number,
+  caloriesIntake: CaloriesTracking[],
+  caloriesOutput: CaloriesOutputTracking[]
+) => {
+  const convertToDate = (timestamp: any): Date => {
+    if (timestamp instanceof Timestamp) {
+      return timestamp.toDate();
+    } else if (typeof timestamp === 'object' && 'seconds' in timestamp) {
+      return new Date(timestamp.seconds * 1000);
+    } else {
+      return new Date(timestamp);
+    }
+  };
+
+  const formattedGlucoseData = pastGlucoseData.map((entry) => ({
+    timestamp: convertToDate(entry.timestamp).toISOString(),
+    reading: entry.unit === 'mg/dL' ? entry.reading / 18.0182 : entry.reading, // Convert mg/dL to mmol/L
+  }));
+
+  const formattedFoodIntake = caloriesIntake.map((food) => ({
+    timestamp: convertToDate(food.timestamp).toISOString(),
+    calories: food.amount,
+    carbs: food.food_info.carbs,
+    fats: food.food_info.fats,
+    protein: food.food_info.protein,
+    food_name: food.food_info.name,
+  }));
+
+  const formattedCaloriesOutput = caloriesOutput.map((activity) => ({
+    timestamp: convertToDate(activity.timestamp).toISOString(),
+    calories_burned: activity.amount,
+    activity_name: activity.MET_task?.name || activity.StepTrack?.name || 'Unknown',
+    steps: activity.StepTrack?.steps || 0,
+    distance: activity.StepTrack?.distance || 0,
+  }));
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      {
+        role: 'user',
+        content: `
+        Predict the next glucose reading from the current time: ${new Date().toISOString()}.
+        - Past glucose readings: ${JSON.stringify(formattedGlucoseData)}
+        - BMR: ${bmr}
+        - Recent food intake: ${JSON.stringify(formattedFoodIntake)}
+        - Recent calories burned: ${JSON.stringify(formattedCaloriesOutput)}
+
+        Respond with only a JSON object in this format:
+        { "reading": number, "timestamp": string } // Timestamp should be in ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ)
+        `,
+      },
+    ],
+    max_tokens: 50,
+    temperature: 0.7,
+    response_format: { type: 'json_object' },
+  });
+
+  try {
+    if (!response.choices || !response.choices[0]?.message?.content) {
+      throw new Error('Empty or invalid OpenAI response');
+    }
+
+    const prediction = response.choices[0].message.content;
+
+    return prediction;
+  } catch (error) {
+    console.error('Failed to parse OpenAI response:', error);
+    return null;
+  }
+};
