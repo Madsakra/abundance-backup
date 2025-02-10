@@ -1,6 +1,8 @@
+import { FontAwesome } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, ScrollView, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 
 import {
   fetchAllGlucoseReadingForToday,
@@ -10,13 +12,17 @@ import {
 import ActionCard from '~/components/cards/action-card';
 import CaloriesGlucoseCorrelationCard from '~/components/cards/co-relations-graph-card';
 import SummaryCard from '~/components/cards/summary-card';
+import Toast from '~/components/notifications/toast';
+import { useUserAccount } from '~/ctx';
 import { CaloriesOutputTracking, CaloriesTracking } from '~/types/common/calories';
 import { GlucoseReading } from '~/types/common/glucose';
-import { colorGreen } from '~/utils';
+import { colorGreen, toastInfo, toastRef } from '~/utils';
 
 export default function RelationGraph() {
   const user = auth().currentUser;
   const userId = user?.uid || '';
+  const { membershipTier } = useUserAccount();
+  const router = useRouter();
 
   const [currentDate, setCurrentDate] = useState(new Date(Date.now()));
   const [caloriesConsumedToday, setCaloriesConsumedToday] = useState<CaloriesTracking[]>([]);
@@ -55,7 +61,12 @@ export default function RelationGraph() {
       style={{
         backgroundColor: 'white',
       }}>
-      <CaloriesGlucoseCorrelationCard currentDate={currentDate} setCurrentDate={setCurrentDate} />
+      <CaloriesGlucoseCorrelationCard
+        currentDate={currentDate}
+        setCurrentDate={setCurrentDate}
+        showDate={false}
+      />
+      <Toast ref={toastRef} />
       <Text
         style={{
           fontSize: 24,
@@ -75,13 +86,74 @@ export default function RelationGraph() {
           marginTop: 20,
           paddingHorizontal: 20,
         }}>
-        <ActionCard
-          href="/(userScreens)/(claloriesAndGlucose)/calories/cookedMeals"
-          title="Predict Glucose"
-          description="Predict glucose with your data"
-          imageKey="predictGlucose"
-          color={colorGreen}
-        />
+        <Pressable
+          onPress={() => {
+            if (membershipTier?.status !== 'active') {
+              toastInfo('Upgrade to premium to use this feature.');
+              return;
+            }
+            router.push(
+              '/(userScreens)/(caloriesAndGlucose)/glucose/prediction/glucose-prediction'
+            );
+          }}
+          style={{
+            display: 'flex',
+            gap: 10,
+            padding: 10,
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: 'gray',
+            backgroundColor: 'white',
+            boxShadow: '0 15px 35px rgba(0, 0, 0, 0.25)',
+          }}>
+          <Text
+            style={{
+              color: colorGreen,
+              fontWeight: 'bold',
+            }}>
+            Predict Glucose
+          </Text>
+          <View
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: 10,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <View
+              style={{
+                width: 60,
+                height: 60,
+                backgroundColor: 'gray',
+                overflow: 'hidden',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <Image
+                source={require('~/assets/routeImages/chart_data.jpg')}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  resizeMode: 'cover',
+                }}
+              />
+            </View>
+            <Text
+              style={{
+                color: colorGreen,
+                width: 120,
+              }}>
+              Predict glucose with your data
+            </Text>
+          </View>
+          <View
+            style={{
+              marginLeft: 'auto',
+            }}>
+            <FontAwesome name="chevron-right" size={12} color="black" />
+          </View>
+        </Pressable>
         <ActionCard
           href="/(userScreens)/(requestAdvice)/viewNutritionists"
           title="Request Feedback"

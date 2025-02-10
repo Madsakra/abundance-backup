@@ -9,6 +9,7 @@ interface CustomAlertProps {
   message: string;
   onClose: () => void;
   onConfirm?: () => void;
+  error?: boolean;
 }
 
 export const CustomAlert: React.FC<CustomAlertProps> = ({
@@ -17,6 +18,7 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
   message,
   onClose,
   onConfirm,
+  error = false,
 }) => {
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
@@ -27,7 +29,7 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
 
           <View style={styles.buttonsContainer}>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Text style={styles.buttonText}>No</Text>
+              <Text style={styles.buttonText}>{error ? 'Ok' : 'No'}</Text>
             </TouchableOpacity>
             {onConfirm && (
               <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
