@@ -182,10 +182,18 @@ export async function fetchAllGlucosePredictionForToday(
   try {
     return firestore()
       .collection(`accounts/${userId}/glucose-prediction-logs`)
+      .orderBy('timestamp', 'asc')
       .onSnapshot(
         (snapshot) => {
           if (!snapshot.empty) {
-            const glucoseLogs = snapshot.docs.map((doc) => doc.data() as GlucoseReading);
+            const glucoseLogs = snapshot.docs.map((doc) => {
+              const data = doc.data();
+
+              return {
+                ...data,
+                timestamp: data.timestamp.toDate(),
+              } as GlucoseReading;
+            });
             setTotalGlucosePredictionToday(glucoseLogs);
           } else {
             setTotalGlucosePredictionToday([]);
