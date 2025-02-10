@@ -186,14 +186,7 @@ export async function fetchAllGlucosePredictionForToday(
       .onSnapshot(
         (snapshot) => {
           if (!snapshot.empty) {
-            const glucoseLogs = snapshot.docs.map((doc) => {
-              const data = doc.data();
-
-              return {
-                ...data,
-                timestamp: data.timestamp.toDate(),
-              } as GlucoseReading;
-            });
+            const glucoseLogs = snapshot.docs.map((doc) => doc.data() as GlucoseReading);
             setTotalGlucosePredictionToday(glucoseLogs);
           } else {
             setTotalGlucosePredictionToday([]);
