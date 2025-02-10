@@ -7,6 +7,7 @@ import firestore from '@react-native-firebase/firestore';
 import FunctionTiedButton from '~/components/FunctionTiedButton';
 import LoadingAnimation from '~/components/LoadingAnimation';
 import { UserAccount } from '~/types/users/account';
+import { router } from 'expo-router';
 
 export default function SignIn() {
   const [email, setEmail] = useState<string>('');
@@ -86,7 +87,7 @@ export default function SignIn() {
                 width: '90%',
                 borderRadius: 50,
               }}>
-              <Text style={{ fontFamily: 'Poppins-Medium' }}>Name</Text>
+              <Text style={{ fontFamily: 'Poppins-Medium' }}>Email</Text>
               <TextInput
                 placeholder="Enter your email"
                 value={email}
@@ -131,6 +132,11 @@ export default function SignIn() {
             textStyle={styles.buttonText}
             title="Login"
           />
+
+
+          <Pressable style={styles.forgetPassword} onPress={()=>router.navigate('/forget-password')}>
+            <Text style={{color:'#989595',fontFamily:"Poppins-Regular",fontSize:14}}>Forget Password?</Text>
+        </Pressable>
 
 
         </View>
